@@ -1,0 +1,2495 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REPANOS // 官方檔案庫與設定展示</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #090b10;
+            --bg-panel: #121620;
+            --bg-card: #161b27;
+            --border-color: #252f44;
+            --accent-cyan: #38bdf8;
+            --accent-red: #f43f5e;
+            --accent-gold: #eab308;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            line-height: 1.7;
+            overflow-x: hidden;
+            font-weight: 400;
+        }
+
+        /* =========================================================
+           常駐背景流動光幕 (高效能版心電圖波形 Canvas)
+           ========================================================= */
+        #bgWaveCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0.45;
+            will-change: transform;
+        }
+
+        header, .hero, section, footer {
+            position: relative;
+            z-index: 1;
+        }
+
+        .en-serif {
+            font-family: 'Cinzel', serif;
+        }
+
+        /* =========================================================
+           自訂深色科技風細滾動條 (Scrollbar)
+           ========================================================= */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0b0e15;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #2b364d;
+            border-radius: 3px;
+        }
+
+            ::-webkit-scrollbar-thumb:hover {
+                background: var(--accent-cyan);
+            }
+
+        /* =========================================================
+           頂部導航列 (移除 backdrop-filter 提升動態背景幀率)
+           ========================================================= */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(9, 11, 16, 0.96);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 12px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-brand-group {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            text-decoration: none;
+        }
+
+        .nav-logo-slot {
+            display: flex;
+            align-items: center;
+            height: 46px;
+        }
+
+            .nav-logo-slot img {
+                max-height: 46px;
+                width: auto;
+                object-fit: contain;
+            }
+
+        .logo-placeholder {
+            padding: 6px 14px;
+            border: 1px dashed rgba(56, 189, 248, 0.5);
+            color: var(--accent-cyan);
+            font-size: 0.8rem;
+            border-radius: 4px;
+            background: rgba(56, 189, 248, 0.05);
+        }
+
+        .nav-divider {
+            width: 1px;
+            height: 26px;
+            background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.22), transparent);
+        }
+
+        .nav-brand-meta {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .nav-brand-title {
+            font-family: 'Cinzel', serif;
+            font-size: 0.92rem;
+            font-weight: 800;
+            letter-spacing: 2.5px;
+            color: #fff;
+            line-height: 1.2;
+        }
+
+        .nav-brand-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            margin-top: 2px;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: #10b981;
+            box-shadow: 0 0 8px #10b981;
+        }
+
+        nav a {
+            color: var(--text-muted);
+            text-decoration: none;
+            margin-left: 28px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            transition: color 0.2s;
+        }
+
+            nav a:hover {
+                color: var(--text-main);
+            }
+
+        /* =========================================================
+           Hero 主視覺
+           ========================================================= */
+        .hero {
+            position: relative;
+            padding: 100px 5% 85px;
+            text-align: center;
+            background: radial-gradient(ellipse at 50% 35%, rgba(25, 34, 54, 0.82) 0%, rgba(9, 11, 16, 0.85) 72%);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            overflow: hidden;
+        }
+
+        .hero-orbit-ring {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 680px;
+            height: 680px;
+            transform: translate(-50%, -50%);
+            border: 1px solid rgba(56, 189, 248, 0.08);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+            .hero-orbit-ring::after {
+                content: "";
+                position: absolute;
+                inset: 45px;
+                border: 1px dashed rgba(234, 179, 8, 0.1);
+                border-radius: 50%;
+            }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 860px;
+            margin: 0 auto;
+        }
+
+        .hero-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--accent-gold);
+            font-size: 0.85rem;
+            letter-spacing: 3px;
+            margin-bottom: 24px;
+            font-weight: 500;
+        }
+
+            .hero-eyebrow::before,
+            .hero-eyebrow::after {
+                content: "";
+                width: 32px;
+                height: 1px;
+                background: rgba(234, 179, 8, 0.45);
+            }
+
+        .title-wordmark-slot {
+            margin: 0 auto 24px;
+            width: 85%;
+            max-width: 1100px;
+            min-height: 110px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+            .title-wordmark-slot img {
+                width: 100%;
+                height: auto;
+                max-height: 300px;
+                object-fit: contain;
+            }
+
+        .wordmark-fallback {
+            padding: 24px 48px;
+            border: 1px dashed rgba(255, 255, 255, 0.25);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+            .wordmark-fallback h1 {
+                font-family: 'Cinzel', serif;
+                font-size: 3.4rem;
+                letter-spacing: 10px;
+                color: #fff;
+                margin-bottom: 4px;
+            }
+
+            .wordmark-fallback span {
+                font-size: 0.8rem;
+                color: var(--text-muted);
+                letter-spacing: 1px;
+            }
+
+        .hero-subtitle {
+            font-size: 1.15rem;
+            color: #cbd5e1;
+            font-weight: 300;
+            letter-spacing: 1.5px;
+            margin-bottom: 36px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border-radius: 4px;
+            border: 1px solid var(--accent-cyan);
+            background: rgba(56, 189, 248, 0.12);
+            color: var(--accent-cyan);
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.25s ease;
+            letter-spacing: 1px;
+            font-size: 0.95rem;
+        }
+
+            .btn:hover {
+                background: var(--accent-cyan);
+                color: #090b10;
+                box-shadow: 0 6px 20px rgba(56, 189, 248, 0.3);
+            }
+
+        .btn-secondary {
+            border-color: rgba(255, 255, 255, 0.2);
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+            .btn-secondary:hover {
+                border-color: #fff;
+                background: rgba(255, 255, 255, 0.12);
+                color: #fff;
+                box-shadow: none;
+            }
+
+        section {
+            padding: 75px 5%;
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 16px;
+            margin-bottom: 34px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .section-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            color: #fff;
+        }
+
+            .section-title small {
+                display: block;
+                font-family: 'Cinzel', serif;
+                font-size: 0.78rem;
+                color: var(--accent-cyan);
+                letter-spacing: 2.5px;
+                font-weight: 600;
+                margin-bottom: 4px;
+            }
+
+        .section-sub {
+            color: var(--text-muted);
+            font-size: 0.92rem;
+        }
+
+        /* =========================================================
+           系統核心架構
+           ========================================================= */
+        .arch-container {
+            display: grid;
+            grid-template-columns: 330px 1fr;
+            gap: 24px;
+            background: rgba(18, 22, 32, 0.96);
+            border: 1px solid var(--border-color);
+            padding: 24px;
+            border-radius: 8px;
+        }
+
+        .arch-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .arch-tab {
+            text-align: left;
+            padding: 18px 20px;
+            background: #0d1018;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+            .arch-tab:hover {
+                border-color: #3b4b6b;
+                color: #fff;
+            }
+
+            .arch-tab.active {
+                background: rgba(56, 189, 248, 0.08);
+                border-color: var(--accent-cyan);
+                color: #fff;
+            }
+
+            .arch-tab .num {
+                font-family: 'Cinzel', serif;
+                font-size: 0.78rem;
+                color: var(--accent-cyan);
+                letter-spacing: 1.5px;
+                display: block;
+                margin-bottom: 4px;
+            }
+
+            .arch-tab .title {
+                font-size: 1.05rem;
+                font-weight: 700;
+            }
+
+        .arch-display {
+            background: #0b0e15;
+            border: 1px solid #1e2638;
+            padding: 32px;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .arch-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            font-size: 0.78rem;
+            background: rgba(234, 179, 8, 0.12);
+            color: var(--accent-gold);
+            border: 1px solid rgba(234, 179, 8, 0.35);
+            border-radius: 4px;
+            margin-bottom: 14px;
+            width: fit-content;
+            font-weight: 500;
+        }
+
+        .arch-display h3 {
+            font-size: 1.45rem;
+            color: #fff;
+            margin-bottom: 14px;
+            font-weight: 700;
+        }
+
+        .arch-display p {
+            color: #cbd5e1;
+            font-size: 0.98rem;
+            margin-bottom: 26px;
+            line-height: 1.8;
+        }
+
+        .sim-hud {
+            background: #121723;
+            border: 1px solid #253046;
+            padding: 20px;
+            border-radius: 6px;
+        }
+
+        .hud-row {
+            margin-bottom: 14px;
+        }
+
+            .hud-row:last-child {
+                margin-bottom: 0;
+            }
+
+        .hud-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+
+        .bar-bg {
+            width: 100%;
+            height: 8px;
+            background: #080a0f;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .bar-fill-sync {
+            width: 75%;
+            height: 100%;
+            background: var(--accent-cyan);
+        }
+
+        .bar-fill-load {
+            width: 82%;
+            height: 100%;
+            background: var(--accent-red);
+            animation: pulseLoad 1.8s infinite alternate;
+        }
+
+        @keyframes pulseLoad {
+            from {
+                opacity: 0.72;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* =========================================================
+           3D 卡牌翻轉圖鑑 (加入 content-visibility 視窗外自動休眠優化)
+           ========================================================= */
+        .controls-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 28px;
+            background: rgba(18, 22, 32, 0.96);
+            padding: 16px 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 7px 16px;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+            .tab-btn.active, .tab-btn:hover {
+                border-color: var(--accent-cyan);
+                color: var(--accent-cyan);
+                background: rgba(56, 189, 248, 0.08);
+            }
+
+        .progress-box {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.9rem;
+        }
+
+        .progress-stat {
+            color: var(--accent-cyan);
+            font-weight: 700;
+        }
+
+        .action-mini-btn {
+            padding: 6px 12px;
+            font-size: 0.82rem;
+            background: #1b2230;
+            border: 1px solid #334155;
+            border-radius: 4px;
+            color: #e2e8f0;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+            .action-mini-btn:hover {
+                border-color: var(--accent-cyan);
+                color: var(--accent-cyan);
+            }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(245px, 1fr));
+            gap: 24px;
+        }
+
+        .flip-card {
+            background-color: transparent;
+            height: 475px;
+            perspective: 1200px;
+            cursor: pointer;
+            content-visibility: auto;
+            contain-intrinsic-size: 245px 475px;
+        }
+
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.65s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transform-style: preserve-3d;
+        }
+
+        .flip-card.is-flipped .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid var(--border-color);
+            background: var(--bg-card);
+        }
+
+            .flip-card-front:hover {
+                border-color: var(--accent-cyan);
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.45);
+            }
+
+        .flip-card-back {
+            transform: rotateY(180deg);
+            border-color: rgba(244, 63, 94, 0.4);
+            background: #0d1017;
+        }
+
+            .flip-card-back:hover {
+                border-color: var(--accent-red);
+            }
+
+        .card-img-wrap {
+            width: 100%;
+            height: 230px;
+            background: #080a0f;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .card-img-wrap img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
+                .card-img-wrap img.auto-silhouette {
+                    filter: brightness(0) invert(0.08);
+                }
+
+        .lock-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(13, 16, 23, 0.35);
+            color: var(--accent-red);
+            font-weight: 700;
+            letter-spacing: 2px;
+            font-size: 0.9rem;
+            pointer-events: none;
+        }
+
+        .card-type-tag {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(9, 11, 16, 0.88);
+            padding: 3px 9px;
+            font-size: 0.75rem;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+        }
+
+        .card-cost {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--bg-dark);
+            border: 1px solid var(--accent-cyan);
+            color: var(--accent-cyan);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+
+        .flip-card-back .card-cost {
+            border-color: var(--accent-red);
+            color: var(--accent-red);
+        }
+
+        .card-body {
+            padding: 15px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .card-name {
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin-bottom: 6px;
+            color: #fff;
+        }
+
+        .flip-card-back .card-name {
+            color: var(--accent-red);
+        }
+
+        .card-desc {
+            font-size: 0.83rem;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            line-height: 1.48;
+            display: -webkit-box;
+            -webkit-line-clamp: 4;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .card-recycle {
+            font-size: 0.76rem;
+            color: var(--accent-gold);
+            background: rgba(234, 179, 8, 0.08);
+            padding: 5px 9px;
+            border-left: 2px solid var(--accent-gold);
+            margin-bottom: 10px;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .flip-hint-btn {
+            width: 100%;
+            padding: 7px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            background: #1b2230;
+            color: var(--accent-cyan);
+            font-size: 0.78rem;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .flip-card-back .flip-hint-btn {
+            border-color: rgba(244, 63, 94, 0.35);
+            color: var(--accent-red);
+            background: #1c1218;
+        }
+
+        /* =========================================================
+           敵人檔案網格 + 彈出式預覽視窗 (Modal & 簡述/詳述切換)
+           ========================================================= */
+        .enemy-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 24px;
+        }
+
+        .enemy-dossier-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.25s ease, border-color 0.25s ease;
+            display: flex;
+            flex-direction: column;
+            content-visibility: auto;
+            contain-intrinsic-size: 280px 410px;
+        }
+
+            .enemy-dossier-card.boss {
+                border-color: rgba(244, 63, 94, 0.45);
+            }
+
+            .enemy-dossier-card.elite {
+                border-color: rgba(234, 179, 8, 0.4);
+            }
+
+            .enemy-dossier-card.event {
+                border-color: rgba(168, 85, 247, 0.45);
+            }
+
+            .enemy-dossier-card:hover {
+                transform: translateY(-6px);
+                border-color: var(--accent-cyan);
+                box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+            }
+
+            .enemy-dossier-card.boss:hover {
+                border-color: var(--accent-red);
+            }
+
+            .enemy-dossier-card.elite:hover {
+                border-color: var(--accent-gold);
+            }
+
+            .enemy-dossier-card.event:hover {
+                border-color: #c084fc;
+            }
+
+        .dossier-art-box {
+            height: 270px;
+            background: radial-gradient(circle at center, #1d2536 0%, #090b10 85%);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+            .dossier-art-box img {
+                max-width: 100%;
+                max-height: 100%;
+                object-fit: contain;
+                transition: transform 0.3s ease;
+            }
+
+        .enemy-dossier-card:hover .dossier-art-box img {
+            transform: scale(1.06);
+        }
+
+        .dossier-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            padding: 3px 10px;
+            font-size: 0.74rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            border-radius: 4px;
+            background: rgba(56, 189, 248, 0.14);
+            border: 1px solid var(--accent-cyan);
+            color: var(--accent-cyan);
+        }
+
+            .dossier-badge.elite {
+                background: rgba(234, 179, 8, 0.15);
+                border-color: var(--accent-gold);
+                color: var(--accent-gold);
+            }
+
+            .dossier-badge.boss {
+                background: rgba(244, 63, 94, 0.18);
+                border-color: var(--accent-red);
+                color: var(--accent-red);
+            }
+
+            .dossier-badge.event {
+                background: rgba(168, 85, 247, 0.18);
+                border-color: #c084fc;
+                color: #d8b4fe;
+            }
+
+        .dossier-id {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            font-family: 'Cinzel', serif;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        .dossier-body {
+            padding: 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .dossier-name {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+
+        .dossier-summary {
+            font-size: 0.86rem;
+            color: var(--text-muted);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        .dossier-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            font-size: 0.82rem;
+            color: var(--accent-cyan);
+            font-weight: 500;
+        }
+
+        /* =========================================================
+           彈出視窗 Modal
+           ========================================================= */
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 999;
+            background: rgba(5, 7, 11, 0.88);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+
+            .modal-backdrop.open {
+                opacity: 1;
+                pointer-events: auto;
+            }
+
+        .modal-window {
+            background: #10141e;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85);
+            max-width: 1020px;
+            width: 100%;
+            height: 85vh;
+            max-height: 780px;
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transform: scale(0.96);
+            transition: transform 0.22s ease;
+        }
+
+        .modal-backdrop.open .modal-window {
+            transform: scale(1);
+        }
+
+        .modal-top-bar {
+            background: #0a0d14;
+            padding: 14px 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+
+        .modal-close-btn {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 5px 14px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.82rem;
+            transition: 0.2s;
+        }
+
+            .modal-close-btn:hover {
+                background: var(--accent-red);
+                border-color: var(--accent-red);
+                color: #fff;
+            }
+
+        .modal-content-grid {
+            display: grid;
+            grid-template-columns: 340px 1fr;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .modal-art-pane {
+            background: radial-gradient(circle at center, #1b2336 0%, #080a0f 85%);
+            padding: 28px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-right: 1px solid var(--border-color);
+            overflow-y: auto;
+        }
+
+            .modal-art-pane img {
+                max-width: 100%;
+                max-height: 340px;
+                object-fit: contain;
+            }
+
+        .modal-stats-bar {
+            width: 100%;
+            margin-top: 22px;
+            background: rgba(0, 0, 0, 0.45);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 10px 14px;
+            font-size: 0.84rem;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .modal-details-pane {
+            padding: 26px 32px;
+            overflow-y: auto;
+            height: 100%;
+        }
+
+        .modal-enemy-title {
+            font-size: 1.65rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+
+        .modal-enemy-chapter {
+            font-size: 0.88rem;
+            color: var(--accent-cyan);
+            margin-bottom: 16px;
+        }
+
+        .modal-lore-box {
+            background: rgba(255, 255, 255, 0.03);
+            border-left: 3px solid var(--accent-gold);
+            padding: 14px 18px;
+            color: #cbd5e1;
+            font-size: 0.92rem;
+            margin-bottom: 24px;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .skills-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .modal-skills-title {
+            font-size: 0.95rem;
+            letter-spacing: 1px;
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .mode-switch-group {
+            display: inline-flex;
+            background: #090b10;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 2px;
+        }
+
+        .mode-btn {
+            padding: 4px 14px;
+            font-size: 0.82rem;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-radius: 3px;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+            .mode-btn.active {
+                background: var(--accent-cyan);
+                color: #090b10;
+                font-weight: 700;
+            }
+
+        .modal-skill-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .phase-group-title {
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: var(--accent-cyan);
+            background: rgba(56, 189, 248, 0.08);
+            border-left: 3px solid var(--accent-cyan);
+            padding: 6px 12px;
+            margin-top: 8px;
+            margin-bottom: 4px;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .modal-skill-item {
+            background: #151a26;
+            border: 1px solid #263045;
+            padding: 13px 16px;
+            border-radius: 6px;
+        }
+
+            .modal-skill-item.trauma-react {
+                border-color: rgba(244, 63, 94, 0.45);
+                background: rgba(244, 63, 94, 0.05);
+            }
+
+        .modal-skill-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 5px;
+            flex-wrap: wrap;
+        }
+
+        .skill-tag {
+            font-size: 0.72rem;
+            padding: 1px 7px;
+            border-radius: 3px;
+            font-weight: 700;
+            background: rgba(255, 255, 255, 0.08);
+            color: #cbd5e1;
+        }
+
+            .skill-tag.atk {
+                background: rgba(244, 63, 94, 0.18);
+                color: #fda4af;
+            }
+
+            .skill-tag.buf {
+                background: rgba(56, 189, 248, 0.18);
+                color: #7dd3fc;
+            }
+
+            .skill-tag.deb {
+                background: rgba(234, 179, 8, 0.18);
+                color: #fde047;
+            }
+
+            .skill-tag.trm {
+                background: rgba(244, 63, 94, 0.3);
+                color: #fff;
+            }
+
+        .modal-skill-name {
+            color: var(--accent-gold);
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+
+        .modal-skill-item.trauma-react .modal-skill-name {
+            color: var(--accent-red);
+        }
+
+        .modal-skill-desc {
+            color: #e2e8f0;
+            font-size: 0.87rem;
+            line-height: 1.6;
+        }
+
+        .sub-effect-note {
+            margin-top: 6px;
+            padding: 6px 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+            font-size: 0.82rem;
+            color: #94a3b8;
+        }
+
+        /* =========================================================
+           頁尾與工作室 LOGO 專屬位置
+           ========================================================= */
+        footer {
+            background: rgba(6, 8, 12, 0.96);
+            border-top: 1px solid var(--border-color);
+            padding: 50px 5%;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .studio-logo-slot {
+            margin: 0 auto 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+            .studio-logo-slot img {
+                max-height: 56px;
+                width: auto;
+                object-fit: contain;
+                margin-bottom: 8px;
+            }
+
+        .studio-placeholder {
+            display: inline-block;
+            padding: 8px 20px;
+            border: 1px dashed rgba(255, 255, 255, 0.25);
+            border-radius: 4px;
+            font-family: 'Cinzel', serif;
+            letter-spacing: 2px;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+
+        .team-members {
+            margin-top: 12px;
+            color: #cbd5e1;
+            font-size: 0.92rem;
+        }
+
+        @media (max-width: 850px) {
+            .arch-container {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-window {
+                height: 90vh;
+                max-height: none;
+            }
+
+            .modal-content-grid {
+                grid-template-columns: 1fr;
+                overflow-y: auto;
+            }
+
+            .modal-art-pane {
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            .modal-details-pane {
+                height: auto;
+                overflow-y: visible;
+            }
+
+            .nav-brand-meta, .nav-divider {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 常駐背景神經同步心電圖光幕 -->
+    <canvas id="bgWaveCanvas"></canvas>
+
+    <!-- 頂部導航列 -->
+    <header>
+        <a href="#" class="nav-brand-group" title="返回頂部">
+            <div class="nav-logo-slot">
+                <img src="images/game_logo.png" alt="Game Logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';">
+                <span class="logo-placeholder" style="display:none;">[ images/game_logo.png ]</span>
+            </div>
+            <div class="nav-divider"></div>
+            <div class="nav-brand-meta">
+                <span class="nav-brand-title">REPANOS ARCHIVE</span>
+                <span class="nav-brand-status"><i class="status-dot"></i> 檔案資料庫同步中 · V0.6 ALPHA</span>
+            </div>
+        </a>
+        <nav>
+            <a href="#features">核心玩法</a>
+            <a href="#card-dex">協議卡牌圖鑑</a>
+            <a href="#enemy-dex">異常實體圖鑑</a>
+            <a href="#team">製作團隊</a>
+        </nav>
+    </header>
+
+    <!-- 中央主視覺開頭 -->
+    <div class="hero">
+        <div class="hero-orbit-ring"></div>
+        <div class="hero-content">
+            <div class="hero-eyebrow en-serif">COGNITIVE ROGUELIKE DECKBUILDER</div>
+
+            <div class="title-wordmark-slot">
+                <img src="images/title_wordmark.png" alt="Repanos 標準字" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <div class="wordmark-fallback" style="display:none;">
+                    <h1>REPANOS</h1>
+                    <span>[ 預留位：請將標準字圖檔命名為 images/title_wordmark.png ]</span>
+                </div>
+            </div>
+
+            <p class="hero-subtitle">重構破碎的記憶殘響，在理智與過載的邊界尋求真實</p>
+
+            <div class="btn-group">
+                <a href="#card-dex" class="btn">瀏覽協議卡牌圖鑑</a>
+                <a href="#enemy-dex" class="btn btn-secondary">查閱異常實體檔案</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 互動式系統核心架構區塊 -->
+    <section id="features">
+        <div class="section-header">
+            <h2 class="section-title">
+                <small>CORE MECHANICS</small>
+                系統核心架構
+            </h2>
+            <span class="section-sub">點選左側模組切換檢視遊戲核心機制</span>
+        </div>
+        <div class="arch-container">
+            <div class="arch-menu">
+                <button class="arch-tab active" onclick="switchArch(0, this)">
+                    <span class="num">SYSTEM 01</span>
+                    <span class="title">雙資源與認知過載 (Sync & Load)</span>
+                </button>
+                <button class="arch-tab" onclick="switchArch(1, this)">
+                    <span class="num">SYSTEM 02</span>
+                    <span class="title">動態回收條件與永久消耗</span>
+                </button>
+                <button class="arch-tab" onclick="switchArch(2, this)">
+                    <span class="num">SYSTEM 03</span>
+                    <span class="title">哲學事件與人格抉擇</span>
+                </button>
+            </div>
+            <div class="arch-display" id="archDisplay"></div>
+        </div>
+    </section>
+
+    <!-- 3D 翻轉卡牌圖鑑區塊 -->
+    <section id="card-dex">
+        <div class="section-header">
+            <div>
+                <h2 class="section-title">
+                    <small>PROTOCOL ARCHIVE</small>
+                    協議卡牌圖鑑
+                </h2>
+                <p class="section-sub">點擊任一張卡牌即可觸發 3D 翻轉動畫，檢視已解鎖卡面與未解鎖剪影狀態</p>
+            </div>
+        </div>
+
+        <div class="controls-bar">
+            <div class="tabs" id="cardTabs">
+                <button class="tab-btn active" onclick="filterCards('all', this)">全部協議 (134)</button>
+                <button class="tab-btn" onclick="filterCards('attack', this)">攻擊端 (32)</button>
+                <button class="tab-btn" onclick="filterCards('defend', this)">防禦端 (25)</button>
+                <button class="tab-btn" onclick="filterCards('resource', this)">資源端 (51)</button>
+                <button class="tab-btn" onclick="filterCards('status', this)">狀態端 (21)</button>
+                <button class="tab-btn" onclick="filterCards('ability', this)">能力端 (5)</button>
+            </div>
+            <div class="progress-box">
+                <span>同步解鎖進度：<span class="progress-stat" id="unlockProgress">0 / 0</span></span>
+                <button class="action-mini-btn" onclick="toggleAllCards(true)">全部翻至正面</button>
+                <button class="action-mini-btn" onclick="toggleAllCards(false)">全部翻至背面</button>
+            </div>
+        </div>
+
+        <div class="card-grid" id="cardGrid"></div>
+    </section>
+
+    <!-- 敵人圖鑑區塊 -->
+    <section id="enemy-dex">
+        <div class="section-header">
+            <div>
+                <h2 class="section-title">
+                    <small>THREAT ENTITIES</small>
+                    異常實體圖鑑
+                </h2>
+                <p class="section-sub">點擊任一實體檔案卡，可開啟檢視視窗並自由切換「簡述 / 詳述」完整技能組</p>
+            </div>
+        </div>
+        <div class="enemy-grid" id="enemyGrid"></div>
+    </section>
+
+    <!-- 彈出式敵人詳細資料預覽視窗 (Modal) -->
+    <div class="modal-backdrop" id="enemyModal" onclick="closeEnemyModal(event)">
+        <div class="modal-window" onclick="event.stopPropagation()">
+            <div class="modal-top-bar">
+                <span id="modalCodeHeader" class="en-serif">ENTITY RECORD</span>
+                <button class="modal-close-btn" onclick="forceCloseModal()">關閉檔案 [ESC]</button>
+            </div>
+            <div class="modal-content-grid" id="modalContentBody"></div>
+        </div>
+    </div>
+
+    <!-- 頁尾與工作室 LOGO 專屬位置 -->
+    <footer id="team">
+        <div class="studio-logo-slot">
+            <img src="images/studio_logo.png" alt="Build.exe Studio Logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';">
+            <div class="studio-placeholder" style="display:none;">BUILD.EXE STUDIO</div>
+        </div>
+        <p>正修科大數位多媒體設計系畢業專題製作團隊《build.exe》｜指導老師：陳志浩</p>
+        <div class="team-members">
+            組長：黃柏崙（程式架構與系統整合）｜ 組員：吳廷恩（主美術）、張又升（UI/UX 與動態特效）、陸彣亞（專職卡圖與周邊）、楊晉安（企劃與文本）
+        </div>
+    </footer>
+
+    <script>
+        // =========================================================================
+        // 系統架構資料區
+        // =========================================================================
+        const archData = [
+            {
+                badge: "雙資源動態博弈",
+                title: "雙資源與認知過載 (Sync & Load)",
+                desc: "打破傳統卡牌單一能量限制。每次出牌除了消耗同步能量 (Sync)，更會累積大腦系統負荷 (Load)。當負荷突破臨界門檻或連續打出同調卡牌時，戰場將即時爆發階梯式報錯彈窗與視覺干擾，玩家必須在出牌之餘親手排除認知阻礙。",
+                hudHtml: `
+                        <div class="sim-hud">
+                            <div class="hud-row">
+                                <div class="hud-label"><span style="color:#38bdf8">SYNC 同步能量</span><span>3 / 4</span></div>
+                                <div class="bar-bg"><div class="bar-fill-sync"></div></div>
+                            </div>
+                            <div class="hud-row">
+                                <div class="hud-label"><span style="color:#f43f5e">LOAD 認知負荷（臨界狀態：即將觸發視窗干擾）</span><span>82%</span></div>
+                                <div class="bar-bg"><div class="bar-fill-load"></div></div>
+                            </div>
+                        </div>`
+            },
+            {
+                badge: "牌庫生態閉環",
+                title: "動態回收條件與永久消耗",
+                desc: "高階特質協議自帶獨特的局內「回收條件」（如單回合造成指定傷害、維持多層狀態）。若打完未能達成回收條件，該卡牌將從牌庫中永久消耗，並於編輯器留下紅色幽靈卡槽，玩家需前往精神交易所花費資源將記憶碎片打撈購回。",
+                hudHtml: `
+                        <div class="sim-hud" style="font-size:0.88rem; color:#eab308;">
+                            <div>狀態檢核：特質協議《伊卡洛斯的傲慢》已使用</div>
+                            <div style="color:#f43f5e; margin-top:6px;">回收條件未達成：已從主牌庫移除（登記至精神交易所打撈池）</div>
+                        </div>`
+            },
+            {
+                badge: "敘事與機制連動",
+                title: "哲學事件與人格抉擇",
+                desc: "深入古希臘意識深層，與第歐根尼、薛西弗斯等哲學意象展開交鋒。玩家在事件中的每一次道德或邏輯抉擇，都將直接轉化為對應的專屬協議卡牌或永久改變牌組構築方向，讓敘事與戰鬥策略緊密相扣。",
+                hudHtml: `
+                        <div class="sim-hud" style="font-size:0.88rem; color:#38bdf8;">
+                            <div>事件紀錄：雅典學院的公開辯論</div>
+                            <div style="color:#cbd5e1; margin-top:6px;">抉擇結果：獲得專屬協議卡牌《靈光一閃》與《理性思考》</div>
+                        </div>`
+            }
+        ];
+
+        function switchArch(index, btn) {
+            document.querySelectorAll('.arch-tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            const item = archData[index];
+            document.getElementById('archDisplay').innerHTML = `
+                    <div>
+                        <div class="arch-badge">${item.badge}</div>
+                        <h3>${item.title}</h3>
+                        <p>${item.desc}</p>
+                    </div>
+                    ${item.hudHtml}
+                `;
+        }
+
+        // =========================================================================
+        // 1. 完整卡牌資料庫 (134 張)
+        // =========================================================================
+        const cardsData = [
+            // --- 攻擊端 (32 張) ---
+            { id: "ATT-01", name: "打擊", type: "attack", typeName: "攻擊端", cost: "1", img: "images/cards/打擊.PNG", silhouetteImg: "images/silhouettes/打擊.PNG", desc: "造成6點傷害。", recycle: "卡牌特性：普通" },
+            { id: "ATT-02", name: "追擊", type: "attack", typeName: "攻擊端", cost: "1", img: "images/cards/追擊.PNG", silhouetteImg: "images/silhouettes/追擊.PNG", desc: "當前回合每次攻擊後都會再造成5點傷害的攻擊。", recycle: "回收條件：一回合內造成3次傷害" },
+            { id: "ATT-03", name: "精準打擊", type: "attack", typeName: "攻擊端", cost: "1", img: "images/cards/精準打擊.PNG", silhouetteImg: "images/silhouettes/精準打擊.PNG", desc: "造成 10 點傷害", recycle: "回收條件：對持有\"減益\"狀態的敵人造成傷害" },
+            { id: "ATT-04", name: "強化打擊", type: "attack", typeName: "攻擊端", cost: "2", img: "images/cards/強化打擊.PNG", silhouetteImg: "images/silhouettes/強化打擊.PNG", desc: "造成14點傷害。", recycle: "卡牌特性：普通" },
+            { id: "ATT-05", name: "酷刑", type: "attack", typeName: "攻擊端", cost: "2", img: "images/cards/酷刑.PNG", silhouetteImg: "images/silhouettes/酷刑.PNG", desc: "造成8點傷害，若敵方持有\"減益\"狀態，額外造成8點傷害。", recycle: "回收條件：對敵人施加”減益”狀態" },
+            { id: "ATT-06", name: "血債血還", type: "attack", typeName: "攻擊端", cost: "0", img: "images/cards/血債血還.PNG", silhouetteImg: "images/silhouettes/血債血還.PNG", desc: "造成本回合損失HP值的傷害", recycle: "回收條件：損失20點HP" },
+            { id: "ATT-07", name: "雙重打擊", type: "attack", typeName: "攻擊端", cost: "2", img: "images/cards/雙重打擊.PNG", silhouetteImg: "images/silhouettes/雙重打擊.PNG", desc: "當前回合所使用的所有攻擊牌都會額外觸發一次", recycle: "回收條件：打出20張牌" },
+            { id: "ATT-08", name: "苦難無邊無際", type: "attack", typeName: "攻擊端", cost: "3", img: "images/cards/苦難無邊無際.PNG", silhouetteImg: "images/silhouettes/苦難無邊無際.PNG", desc: "造成自身\"減益\"狀態數*6點傷害", recycle: "回收條件：獲得10層\"減益\"狀態" },
+            { id: "ATT-09", name: "心如止水·武", type: "attack", typeName: "攻擊端", cost: "X", img: "images/cards/心如止水·武.PNG", silhouetteImg: "images/silhouettes/心如止水·武.PNG", desc: "解除身上所有狀態，並造成解除狀態數*X點傷害。", recycle: "回收條件：持有四種不同的狀態" },
+            { id: "ATT-10", name: "積怨", type: "attack", typeName: "攻擊端", cost: "2", img: "images/cards/積怨.PNG", silhouetteImg: "images/silhouettes/積怨.PNG", desc: "對敵人造成18點傷害。", recycle: "回收條件：連續兩回合受到傷害" },
+            { id: "ATT-11", name: "自我傷害．以處刑了卻己身", type: "attack", typeName: "攻擊端", cost: "3", img: "images/cards/自我傷害·以處刑了卻己身.PNG", silhouetteImg: "images/silhouettes/自我傷害·以處刑了卻己身.PNG", desc: "減少24點HP，造成42點傷害", recycle: "回收條件：HP>上限的80%時。" },
+            { id: "ATT-12", name: "蓄意挑釁", type: "attack", typeName: "攻擊端", cost: "0", img: "images/cards/蓄意挑釁.PNG", silhouetteImg: "images/silhouettes/蓄意挑釁.PNG", desc: "造成 8 點傷害，並使自身獲得 1 層脆弱。", recycle: "回收條件：受到 1 次敵人造成的傷害。" },
+            { id: "ATT-13", name: "毆打", type: "attack", typeName: "攻擊端", cost: "2", img: "images/cards/毆打.PNG", silhouetteImg: "images/silhouettes/毆打.PNG", desc: "隨機造成2-5次3點傷害", recycle: "回收條件：累積造成5次傷害" },
+            { id: "ATT-14", name: "惡劣玩笑", type: "attack", typeName: "攻擊端", cost: "2", img: "images/cards/惡劣玩笑.PNG", silhouetteImg: "images/silhouettes/惡劣玩笑.PNG", desc: "造成12點傷害，若對方持有脆弱，額外造成12點傷害。", recycle: "回收條件：對持有\"脆弱\"狀態的敵人造成傷害" },
+            { id: "ATT-15", name: "斯巴達式踢擊", type: "attack", typeName: "攻擊端", cost: "1", img: "images/cards/斯巴達式踢擊.PNG", silhouetteImg: "images/silhouettes/斯巴達式踢擊.PNG", desc: "造成15點傷害，並使敵人獲得1層衰弱。", recycle: "回收條件：在持有\"力量\"狀態下使用攻擊卡牌" },
+            { id: "ATT-16", name: "伊卡洛斯的傲慢", type: "attack", typeName: "攻擊端", cost: "2", img: "images/cards/伊卡洛斯的傲慢.PNG", silhouetteImg: "images/silhouettes/伊卡洛斯的傲慢.PNG", desc: "賦予自身 3 層脆弱。造成 15 點傷害。若自身身上的\"減益\"狀態層數總和≧5，額外造成 8 點傷害。", recycle: "回收條件：一回合內受到超過 15 點的傷害。" },
+            { id: "ATT-17", name: "推石的薛西弗斯", type: "attack", typeName: "攻擊端", cost: "1", img: "images/cards/推石的薛西弗斯.PNG", silhouetteImg: "images/silhouettes/推石的薛西弗斯.PNG", desc: "造成 8 點傷害。若當前回合已打出過其他普通特性的卡牌，改為造成 16 點傷害，並獲得 1 層衰弱。", recycle: "回收條件：一回合內打出 3 張普通卡牌。" },
+            { id: "ATT-18", name: "阿基里斯之踵", type: "attack", typeName: "攻擊端", cost: "2", img: "images/cards/阿基里斯之踵.PNG", silhouetteImg: "images/silhouettes/阿基里斯之踵.PNG", desc: "造成 12 點傷害。將自身所有的堅韌與毅力層數歸零，每移除 1 層，額外造成 4 點傷害。", recycle: "回收條件：自身未持有任何增益狀態。" },
+            { id: "ATT-19", name: "達摩克利斯之劍", type: "attack", typeName: "攻擊端", cost: "3", img: "images/cards/達摩克利斯之劍.PNG", silhouetteImg: "images/silhouettes/達摩克利斯之劍.PNG", desc: "造成 30點傷害。賦予自身\"懸劍\"效果，持續三回合。\"懸劍\"：每當玩家打出卡牌時，使自身受到 3 點傷害。", recycle: "回收條件：HP<低於上限的 30%時。" },
+            { id: "ATT-20", name: "列陣長矛", type: "attack", typeName: "攻擊端", cost: "1", img: "images/cards/列陣長矛.PNG", silhouetteImg: "images/silhouettes/列陣長矛.PNG", desc: "造成 7 點傷害。若自身持有\"增益\"狀態，傷害提升為 11 點。", recycle: "卡牌特性：普通" },
+            { id: "ATT-21", name: "狂戰血祭", type: "attack", typeName: "攻擊端", cost: "2", img: "images/cards/狂戰血祭.PNG", silhouetteImg: "images/silhouettes/狂戰血祭.PNG", desc: "造成 16 點傷害。若當前回合自身曾損失 HP，此卡額外造成 10 點傷害。", recycle: "回收條件：受到 3次敵人造成的傷害。" },
+            { id: "ATT-22", name: "美杜莎之凝", type: "attack", typeName: "攻擊端", cost: "1", img: "images/cards/美杜莎之凝.PNG", silhouetteImg: "images/silhouettes/美杜莎之凝.PNG", desc: "造成 6 點傷害，並使敵人獲得 2 層\"衰弱\"。", recycle: "回收條件：在敵人行動意圖為攻擊時對敵人施加”減益”狀態" },
+            { id: "ATT-23", name: "阿爾戈號投矛", type: "attack", typeName: "攻擊端", cost: "1", img: "images/cards/阿爾戈號投矛.PNG", silhouetteImg: "images/silhouettes/阿爾戈號投矛.PNG", desc: "造成5點傷害。", recycle: "卡牌特性：回歸" },
+            { id: "ATT-24", name: "涅墨亞之扼", type: "attack", typeName: "攻擊端", cost: "2", img: "images/cards/涅墨亞之扼.PNG", silhouetteImg: "images/silhouettes/涅墨亞之扼.PNG", desc: "造成 14 點傷害。若自身持有毅力，使目標獲得 1 層脆弱。", recycle: "回收條件：自身持有 2 層以上的\"增益\"狀態。" },
+            { id: "ATT-25", name: "陶片放逐", type: "attack", typeName: "攻擊端", cost: "1", img: "images/cards/陶片放逐.PNG", silhouetteImg: "images/silhouettes/陶片放逐.PNG", desc: "造成 8 點傷害。移除敵人的 1 層\"增益\"狀態。", recycle: "回收條件：敵人未持有任何\"增益\"狀態，持續兩回合" },
+            { id: "ATT-26", name: "詭辯", type: "attack", typeName: "攻擊端", cost: "0", img: "images/cards/詭辯.PNG", silhouetteImg: "images/silhouettes/詭辯.PNG", desc: "造成 4 點傷害。若敵方意圖為\"增益\"，額外造成4點傷害。", recycle: "卡牌特性：回歸" },
+            { id: "ATT-27", name: "撞角衝創", type: "attack", typeName: "攻擊端", cost: "3", img: "images/cards/撞角衝創.PNG", silhouetteImg: "images/silhouettes/撞角衝創.PNG", desc: "造成 28 點傷害，使自身獲得 3 層易碎。", recycle: "回收條件：在一回合內消耗 3 點以上的能量。" },
+            { id: "ATT-28", name: "燕返", type: "attack", typeName: "攻擊端", cost: "1", img: "images/cards/燕返.PNG", silhouetteImg: "images/silhouettes/燕返.PNG", desc: "造成12點傷害。若手上攻擊類型卡牌少於兩張(包含此卡)，再造成12點傷害。", recycle: "回收條件：一回合內造成三次傷害，每次傷害>8點。" },
+            { id: "ATT-29", name: "投石索", type: "attack", typeName: "攻擊端", cost: "0", img: "images/cards/投石索.PNG", silhouetteImg: "images/silhouettes/投石索.PNG", desc: "造成3點傷害。80%生成一張「投石索」卡牌加入到抽牌堆；20%生成一張「精準的投石索」卡牌加入到抽牌堆。", recycle: "卡牌特性：隨機/消耗" },
+            { id: "ATT-30", name: "精準投石索", type: "attack", typeName: "攻擊端", cost: "2", img: "images/cards/精準投石索.PNG", silhouetteImg: "images/silhouettes/精準投石索.PNG", desc: "造成30點傷害。", recycle: "卡牌特性：貫穿/消耗" },
+            { id: "ATT-31", name: "五塊石頭", type: "attack", typeName: "攻擊端", cost: "3", img: "images/cards/五塊石頭.PNG", silhouetteImg: "images/silhouettes/五塊石頭.PNG", desc: "生成四張「投石索」卡牌與一張「精準的投石索」卡牌，將其加入手牌。", recycle: "卡牌特性：消耗" },
+            { id: "ATT-32", name: "質疑", type: "attack", typeName: "攻擊端", cost: "1", img: "images/cards/質疑.PNG", silhouetteImg: "images/silhouettes/質疑.PNG", desc: "消耗一張卡牌，造成13點傷害。", recycle: "卡牌特性：回歸" },
+
+            // --- 防禦端 (25 張) ---
+            { id: "DEF-01", name: "防禦", type: "defend", typeName: "防禦端", cost: "1", img: "images/cards/防禦.PNG", silhouetteImg: "images/silhouettes/防禦.PNG", desc: "獲得8點防禦", recycle: "卡牌特性：普通" },
+            { id: "DEF-02", name: "強化防禦", type: "defend", typeName: "防禦端", cost: "2", img: "images/cards/強化防禦.PNG", silhouetteImg: "images/silhouettes/強化防禦.PNG", desc: "獲得18點防禦", recycle: "卡牌特性：普通" },
+            { id: "DEF-03", name: "構建·內心防壁", type: "defend", typeName: "防禦端", cost: "2", img: "images/cards/構建·內心防壁.PNG", silhouetteImg: "images/silhouettes/構建·內心防壁.PNG", desc: "獲得2層堅韌，隨後獲得8點防禦。", recycle: "回收條件：單回合獲得24點防禦" },
+            { id: "DEF-04", name: "過度保護", type: "defend", typeName: "防禦端", cost: "2", img: "images/cards/過度保護.PNG", silhouetteImg: "images/silhouettes/過度保護.PNG", desc: "獲得持續一回合的10層堅韌。", recycle: "回收條件：單次受到傷害≧20" },
+            { id: "DEF-05", name: "多疑", type: "defend", typeName: "防禦端", cost: "3", img: "images/cards/多疑.PNG", silhouetteImg: "images/silhouettes/多疑.PNG", desc: "獲得30點防禦。", recycle: "卡牌特性：回歸" },
+            { id: "DEF-06", name: "心如止水·禦", type: "defend", typeName: "防禦端", cost: "X", img: "images/cards/心如止水·禦.PNG", silhouetteImg: "images/silhouettes/心如止水·禦.PNG", desc: "解除身上所有狀態，並獲得解除狀態數*X點防禦。", recycle: "回收條件：持有四種不同的狀態" },
+            { id: "DEF-07", name: "爆米花", type: "defend", typeName: "防禦端", cost: "1", img: "images/cards/爆米花.PNG", silhouetteImg: "images/silhouettes/爆米花.PNG", desc: "回復8點生命。在持有\"工作夥伴\"時，此卡不消耗能量。", recycle: "卡牌特性：消耗" },
+            { id: "DEF-08", name: "自我傷害．以鎖鏈捆缚己身", type: "defend", typeName: "防禦端", cost: "2", img: "images/cards/自我傷害·以鎖鏈捆缚己身.PNG", silhouetteImg: "images/silhouettes/自我傷害·以鎖鏈捆缚己身.PNG", desc: "減少6點HP，獲得24點防禦", recycle: "回收條件：獲得3層\"減益\"狀態" },
+            { id: "DEF-09", name: "止血帶", type: "defend", typeName: "防禦端", cost: "3", img: "images/cards/止血帶.PNG", silhouetteImg: "images/silhouettes/止血帶.PNG", desc: "使用此卡的回合，單次減少HP不超過10。", recycle: "卡牌特性：消耗" },
+            { id: "DEF-10", name: "醫用安瓿", type: "defend", typeName: "防禦端", cost: "0", img: "images/cards/醫用安瓿.PNG", silhouetteImg: "images/silhouettes/醫用安瓿.PNG", desc: "回復16點HP", recycle: "卡牌特性：消耗" },
+            { id: "DEF-11", name: "縮頭烏龜", type: "defend", typeName: "防禦端", cost: "2", img: "images/cards/縮頭烏龜.PNG", silhouetteImg: "images/silhouettes/縮頭烏龜.PNG", desc: "獲得24點防禦", recycle: "回收條件：在一回合內不使用任意攻擊牌" },
+            { id: "DEF-12", name: "第六感", type: "defend", typeName: "防禦端", cost: "0", img: "images/cards/第六感.PNG", silhouetteImg: "images/silhouettes/第六感.PNG", desc: "獲得8點防禦", recycle: "回收條件：在敵人行動意圖為攻擊時不受到敵人造成的傷害" },
+            { id: "DEF-13", name: "蜘蛛感應", type: "defend", typeName: "防禦端", cost: "1", img: "images/cards/蜘蛛感應.PNG", silhouetteImg: "images/silhouettes/蜘蛛感應.PNG", desc: "獲得24點防禦", recycle: "回收條件：持有至少4層力量。並且在敵人意圖為攻擊時不受到敵人造成的傷害" },
+            { id: "DEF-14", name: "武器化無能", type: "defend", typeName: "防禦端", cost: "0", img: "images/cards/武器化無能.PNG", silhouetteImg: "images/silhouettes/武器化無能.PNG", desc: "移除所有\"增益\"狀態，獲得20點防禦。", recycle: "回收條件：對自身施加3層\"減益\"狀態" },
+            { id: "DEF-15", name: "蟹化", type: "defend", typeName: "防禦端", cost: "1", img: "images/cards/蟹化.PNG", silhouetteImg: "images/silhouettes/蟹化.PNG", desc: "獲得10點防禦，移除一張手牌並生成1張「蟹化」卡牌送入抽牌堆", recycle: "回收條件：使用兩張【防禦】類型的卡牌。" },
+            { id: "DEF-16", name: "理性思考", type: "defend", typeName: "防禦端", cost: "1", img: "images/cards/理性思考.PNG", silhouetteImg: "images/silhouettes/理性思考.PNG", desc: "將一張手牌送入棄牌堆，獲得15點防禦。", recycle: "回收條件：透過卡牌效果獲得能量" },
+            { id: "DEF-17", name: "重裝推進", type: "defend", typeName: "防禦端", cost: "2", img: "images/cards/重裝推進.PNG", silhouetteImg: "images/silhouettes/重裝推進.PNG", desc: "造成 12 點傷害，獲得 6 點護甲。當前回合每打出一張【攻擊】類型的卡牌，護甲額外提升 3 點。", recycle: "卡牌特性：普通" },
+            { id: "DEF-18", name: "斯多葛主義", type: "defend", typeName: "防禦端", cost: "2", img: "images/cards/斯多葛主義.PNG", silhouetteImg: "images/silhouettes/斯多葛主義.PNG", desc: "獲得10點防禦。並賦予自身 1 層毅力、易碎、衰弱。", recycle: "回收條件：在敵人行動意圖為\"減益\"時移除自身的\"減益\"狀態" },
+            { id: "DEF-19", name: "在青銅巨人的手護下", type: "defend", typeName: "防禦端", cost: "2", img: "images/cards/在青銅巨人的手護下.PNG", silhouetteImg: "images/silhouettes/在青銅巨人的手護下.PNG", desc: "獲得 14 點防禦。若當前回合打出過其他帶有普通特性的卡牌，額外獲得 8 點防禦。", recycle: "卡牌特性：普通" },
+            { id: "DEF-20", name: "雅典娜之帷", type: "defend", typeName: "防禦端", cost: "2", img: "images/cards/雅典娜之帷.PNG", silhouetteImg: "images/silhouettes/雅典娜之帷.PNG", desc: "獲得 10 點防禦。若敵方行動意圖為攻擊，對敵方施加 1 層衰弱。", recycle: "回收條件：敵方持有\"減益\"狀態。" },
+            { id: "DEF-21", name: "特洛伊木馬", type: "defend", typeName: "防禦端", cost: "1", img: "images/cards/特洛伊木馬.PNG", silhouetteImg: "images/silhouettes/特洛伊木馬.PNG", desc: "獲得 12 點防禦。若敵方行動意圖為攻擊，對敵方施加 3層脆弱。", recycle: "卡牌特性：虛幻" },
+            { id: "DEF-22", name: "神喻", type: "defend", typeName: "防禦端", cost: "0", img: "images/cards/神喻.PNG", silhouetteImg: "images/silhouettes/神喻.PNG", desc: "獲得 5 點防禦。若當前回合自身尚未打出【攻擊】卡牌，獲得一點能量。", recycle: "卡牌特性：普通" },
+            { id: "DEF-23", name: "阿伽門農的決絕", type: "defend", typeName: "防禦端", cost: "2", img: "images/cards/阿伽門農的決絕.PNG", silhouetteImg: "images/silhouettes/阿伽門農的決絕.PNG", desc: "獲得 22 點防禦。賦予自身 2層易碎。", recycle: "回收條件：消耗一張【資源】卡牌" },
+            { id: "DEF-24", name: "狂熱的祭祀", type: "defend", typeName: "防禦端", cost: "1", img: "images/cards/狂熱的祭祀.PNG", silhouetteImg: "images/silhouettes/狂熱的祭祀.PNG", desc: "減少5 點HP，獲得 2 層堅韌。", recycle: "回收條件：HP<上限的 50%時。" },
+            { id: "DEF-25", name: "戰鬥續行", type: "defend", typeName: "防禦端", cost: "2", img: "images/cards/戰鬥續行.PNG", silhouetteImg: "images/silhouettes/戰鬥續行.PNG", desc: "獲得 1 層毅力。", recycle: "回收條件：HP<上限的 10%時。受到敵人攻擊。" },
+
+            // --- 資源端 (51 張) ---
+            { id: "RES-01", name: "運籌帷幄", type: "resource", typeName: "資源端", cost: "0", img: "images/cards/運籌帷幄.PNG", silhouetteImg: "images/silhouettes/運籌帷幄.PNG", desc: "獲得1點能量", recycle: "回收條件：受到任何來源的傷害" },
+            { id: "RES-02", name: "指令·保存", type: "resource", typeName: "資源端", cost: "1", img: "images/cards/指令·保存.PNG", silhouetteImg: "images/silhouettes/指令·保存.PNG", desc: "選擇3張卡牌，為其施加保留特性。被選定的卡牌被\"移除\"或\"消耗\"後移除保留特性。", recycle: "回收條件：抽牌堆剩餘張數>14時" },
+            { id: "RES-03", name: "指令·剔除", type: "resource", typeName: "資源端", cost: "2", img: "images/cards/指令·剔除.PNG", silhouetteImg: "images/silhouettes/指令·剔除.PNG", desc: "\"移除\"3張卡牌，隨後獲得3點能量。", recycle: "回收條件：棄牌堆>18時" },
+            { id: "RES-04", name: "抉擇", type: "resource", typeName: "資源端", cost: "1", img: "images/cards/抉擇.PNG", silhouetteImg: "images/silhouettes/抉擇.PNG", desc: "抽一張牌，並選擇一張牌送回抽牌堆頂端。", recycle: "回收條件：抽牌" },
+            { id: "RES-05", name: "沉思", type: "resource", typeName: "資源端", cost: "1", img: "images/cards/沉思.PNG", silhouetteImg: "images/silhouettes/沉思.PNG", desc: "無效果。持有此卡時，在回合開始時獲得1點能量。", recycle: "卡牌特性：保留/消耗" },
+            { id: "RES-06", name: "靈光一閃", type: "resource", typeName: "資源端", cost: "1", img: "images/cards/靈光一閃.PNG", silhouetteImg: "images/silhouettes/靈光一閃.PNG", desc: "抽取1張卡牌。", recycle: "卡牌特性：回歸" },
+            { id: "RES-07", name: "絕處逢生", type: "resource", typeName: "資源端", cost: "X", img: "images/cards/絕處逢生.PNG", silhouetteImg: "images/silhouettes/絕處逢生.PNG", desc: "使所有手牌費用降低X點（最低降至0）。", recycle: "回收條件：HP<上限的 10%。" },
+            { id: "RES-08", name: "指令·召回", type: "resource", typeName: "資源端", cost: "2", img: "images/cards/指令·召回.PNG", silhouetteImg: "images/silhouettes/指令·召回.PNG", desc: "指定一張卡牌，無視該卡的回收條件，將其送回棄牌堆。", recycle: "卡牌特性：消耗" },
+            { id: "RES-09", name: "心如止水·源", type: "resource", typeName: "資源端", cost: "3", img: "images/cards/心如止水·源.PNG", silhouetteImg: "images/silhouettes/心如止水·源.PNG", desc: "解除身上所有狀態，獲得解除狀態種類*1點能量。", recycle: "回收條件：持有四種不同的狀態" },
+            { id: "RES-10", name: "大腦風暴", type: "resource", typeName: "資源端", cost: "X", img: "images/cards/大腦風暴.PNG", silhouetteImg: "images/silhouettes/大腦風暴.PNG", desc: "移除所有手牌，隨後獲得等同於移除牌數之能量&抽取X張牌", recycle: "回收條件：手牌與能量的總和>15" },
+            { id: "RES-11", name: "思緒整理", type: "resource", typeName: "資源端", cost: "1", img: "images/cards/思緒整理.PNG", silhouetteImg: "images/silhouettes/思緒整理.PNG", desc: "抽一張牌", recycle: "卡牌特性：回歸" },
+            { id: "RES-12", name: "快速檢索", type: "resource", typeName: "資源端", cost: "0", img: "images/cards/快速檢索.PNG", silhouetteImg: "images/silhouettes/快速檢索.PNG", desc: "檢索抽牌堆一張沒有特性的卡牌，將其加入手牌", recycle: "卡牌特性：普通" },
+            { id: "RES-13", name: "啟示", type: "resource", typeName: "資源端", cost: "0", img: "images/cards/啟示.PNG", silhouetteImg: "images/silhouettes/啟示.PNG", desc: "消耗至多3層祈禱，獲得等同於消耗祈禱數之能量", recycle: "回收條件：獲得3層祈禱" },
+            { id: "RES-14", name: "自責", type: "resource", typeName: "資源端", cost: "1", img: "images/cards/自責.PNG", silhouetteImg: "images/silhouettes/自責.PNG", desc: "獲得1層脆弱，檢索帶有\"自我傷害\"字段的卡牌，並將一張手牌送回抽牌堆頂端。", recycle: "回收條件：HP減少" },
+            { id: "RES-15", name: "自我傷害．以長矛穿刺己身", type: "resource", typeName: "資源端", cost: "1", img: "images/cards/自我傷害·以長矛穿刺己身.PNG", silhouetteImg: "images/silhouettes/自我傷害·以長矛穿刺己身.PNG", desc: "減少6點HP，抽取3張牌。", recycle: "回收條件：對敵人造成一次≧12的傷害" },
+            { id: "RES-16", name: "俄羅斯輪盤", type: "resource", typeName: "資源端", cost: "X", img: "images/cards/俄羅斯輪盤.PNG", silhouetteImg: "images/silhouettes/俄羅斯輪盤.PNG", desc: "17%減少20點HP或者獲得2X點能量。每次使用此卡提高17%減少HP機率", recycle: "回收條件：HP<20" },
+            { id: "RES-17", name: "快樂爆爆米花", type: "resource", typeName: "資源端", cost: "2", img: "images/cards/快樂爆爆米花.PNG", silhouetteImg: "images/silhouettes/快樂爆爆米花.PNG", desc: "生成3張「爆米花」卡牌送入抽牌堆。", recycle: "卡牌特性：消耗" },
+            { id: "RES-18", name: "憤怒爆爆米花", type: "resource", typeName: "資源端", cost: "2", img: "images/cards/憤怒爆爆米花.PNG", silhouetteImg: "images/silhouettes/憤怒爆爆米花.PNG", desc: "獲得1層力量，並生成2張「爆米花」卡牌送入抽牌堆。", recycle: "卡牌特性：消耗" },
+            { id: "RES-19", name: "哀怨爆爆米花", type: "resource", typeName: "資源端", cost: "1", img: "images/cards/哀怨爆爆米花.PNG", silhouetteImg: "images/silhouettes/哀怨爆爆米花.PNG", desc: "獲得1層脆弱，並生成2張「爆米花」卡牌送入抽牌堆", recycle: "卡牌特性：消耗" },
+            { id: "RES-20", name: "力竭爆爆米花", type: "resource", typeName: "資源端", cost: "1", img: "images/cards/力竭爆爆米花.PNG", silhouetteImg: "images/silhouettes/力竭爆爆米花.PNG", desc: "獲得1層衰弱，並生成2張「爆米花」卡牌送入抽牌堆", recycle: "卡牌特性：消耗" },
+            { id: "RES-21", name: "爆米花缺貨中", type: "resource", typeName: "資源端", cost: "3", img: "images/cards/爆米花缺貨中.PNG", silhouetteImg: "images/silhouettes/爆米花缺貨中.PNG", desc: "隨機將「快樂爆爆米花」「憤怒爆爆米花」「哀怨爆爆米花」「力竭爆爆米花」其中一張卡牌送入抽牌堆頂端。", recycle: "回收條件：抽牌堆內沒有卡牌「爆米花」" },
+            { id: "RES-22", name: "中杯飲料", type: "resource", typeName: "資源端", cost: "0", img: "images/cards/中杯飲料.PNG", silhouetteImg: "images/silhouettes/中杯飲料.PNG", desc: "獲得1點能量。在持有\"工作夥伴\"時，此卡不被消耗，使用後送入棄牌堆", recycle: "卡牌特性：消耗" },
+            { id: "RES-23", name: "無限暢飲", type: "resource", typeName: "資源端", cost: "3", img: "images/cards/無限暢飲.PNG", silhouetteImg: "images/silhouettes/無限暢飲.PNG", desc: "獲得等同於手牌數的能量。在持有\"工作夥伴\"時，使用此卡會獲得1層力量", recycle: "回收條件：在一回合內消耗5點以上的能量。" },
+            { id: "RES-24", name: "拓印", type: "resource", typeName: "資源端", cost: "1", img: "images/cards/拓印.PNG", silhouetteImg: "images/silhouettes/拓印.PNG", desc: "選擇並複製一張手牌，將其加入手牌，並使其費用+1。", recycle: "回收條件：使用被複製的卡牌。" },
+            { id: "RES-25", name: "複寫", type: "resource", typeName: "資源端", cost: "2", img: "images/cards/複寫.PNG", silhouetteImg: "images/silhouettes/複寫.PNG", desc: "選擇並複製一張手牌，將其加入手牌。", recycle: "回收條件：使用被複製的卡牌。" },
+            { id: "RES-26", name: "投影", type: "resource", typeName: "資源端", cost: "1", img: "images/cards/投影.PNG", silhouetteImg: "images/silhouettes/投影.PNG", desc: "選擇並複製一張手牌，將其加入手牌，並為其附加消耗特性。", recycle: "回收條件：使用被複製的卡牌。" },
+            { id: "RES-27", name: "再蟹化", type: "resource", typeName: "資源端", cost: "1", img: "images/cards/再蟹化.PNG", silhouetteImg: "images/silhouettes/再蟹化.PNG", desc: "選擇並消耗兩張手牌，並將兩張「蟹化」加入手牌。", recycle: "回收條件：消耗五張牌" },
+            { id: "RES-28", name: "去蟹化", type: "resource", typeName: "資源端", cost: "0", img: "images/cards/去蟹化.PNG", silhouetteImg: "images/silhouettes/去蟹化.PNG", desc: "從手牌消耗一張「蟹化」卡牌，獲得2點能量", recycle: "回收條件：三回合不使用防禦類型卡牌" },
+            { id: "RES-29", name: "盜火", type: "resource", typeName: "資源端", cost: "0", img: "images/cards/盜火.PNG", silhouetteImg: "images/silhouettes/盜火.PNG", desc: "獲得 2 點能量。對敵方與自身各施加 1 層脆弱。", recycle: "回收條件：因卡片效果獲得能量。" },
+            { id: "RES-30", name: "指令·再分配", type: "resource", typeName: "資源端", cost: "3", img: "images/cards/指令·再分配.PNG", silhouetteImg: "images/silhouettes/指令·再分配.PNG", desc: "從任務回收區選擇至多 2 張卡牌立即送入棄牌堆。每以此法成功送回 1 張卡牌，獲得 1 點能量。", recycle: "回收條件：抽牌堆觸發洗牌時。" },
+            { id: "RES-31", name: "典當", type: "resource", typeName: "資源端", cost: "0", img: "images/cards/典當.PNG", silhouetteImg: "images/silhouettes/典當.PNG", desc: "獲得 2 點能量。將抽牌堆頂端 2 張卡牌直接置入任務回收區（視為未滿足回收條件滯留）。", recycle: "卡牌特性：消耗" },
+            { id: "RES-32", name: "靈感透支", type: "resource", typeName: "資源端", cost: "0", img: "images/cards/靈感透支.PNG", silhouetteImg: "images/silhouettes/靈感透支.PNG", desc: "立即獲得 2 點能量。下個回合開始時，少獲得 1 點能量且少抽 1 張牌。", recycle: "回收條件：在單一回合內打出 4 張或以上卡牌。" },
+            { id: "RES-33", name: "沉澱思緒", type: "resource", typeName: "資源端", cost: "1", img: "images/cards/沉澱思緒.PNG", silhouetteImg: "images/silhouettes/沉澱思緒.PNG", desc: "選擇 1 張手牌送回抽牌堆底端，隨後獲得 1 點能量。若送回的卡牌帶有任何特性，改為獲得 2 點能量。", recycle: "回收條件：抽牌堆剩餘張數 < 5。" },
+            { id: "RES-34", name: "負重前行", type: "resource", typeName: "資源端", cost: "0", img: "images/cards/負重前行.PNG", silhouetteImg: "images/silhouettes/負重前行.PNG", desc: "使自身獲得 1 層衰弱與 1 層脆弱，隨後獲得 3 點能量並抽取 1 張牌。", recycle: "回收條件：自身持有的\"減益\"狀態層數為0時。" },
+            { id: "RES-35", name: "嗜血祭儀", type: "resource", typeName: "資源端", cost: "0", img: "images/cards/嗜血祭儀.PNG", silhouetteImg: "images/silhouettes/嗜血祭儀.PNG", desc: "減少自身 4 點 HP，抽取 2 張牌。若當前持有衰弱，額外獲得 1 點能量。", recycle: "回收條件：受到敵方造成的單次大於8點的傷害。" },
+            { id: "RES-36", name: "晨禱", type: "resource", typeName: "資源端", cost: "1", img: "images/cards/晨禱.PNG", silhouetteImg: "images/silhouettes/晨禱.PNG", desc: "獲得 2 層祈禱。若當前手牌張數≦3，抽取 1 張牌。", recycle: "回收條件：單一回合內打出 2 張帶有保留特性的卡牌。" },
+            { id: "RES-37", name: "爆米花兌換券", type: "resource", typeName: "資源端", cost: "1", img: "images/cards/爆米花兌換券.PNG", silhouetteImg: "images/silhouettes/爆米花兌換券.PNG", desc: "檢索抽牌堆中 1 張帶有\"爆米花\"字段的卡牌加入手牌，並使其本回合能量消耗變為 0。", recycle: "卡牌特性：消耗" },
+            { id: "RES-38", name: "員工餐", type: "resource", typeName: "資源端", cost: "2", img: "images/cards/員工餐.PNG", silhouetteImg: "images/silhouettes/員工餐.PNG", desc: "獲得 2 點能量，抽取 2 張牌。若當前持有\"工作夥伴\"，改為獲得 3 點能量並抽取 3 張牌。", recycle: "回收條件：回合結束時未消耗能量恰好為 0。" },
+            { id: "RES-39", name: "解析重構", type: "resource", typeName: "資源端", cost: "1", img: "images/cards/解析重構.PNG", silhouetteImg: "images/silhouettes/解析重構.PNG", desc: "選擇並消耗 1 張手牌，隨後檢索抽牌堆中至多 2 張與該卡牌同類型的卡牌加入手牌。", recycle: "卡牌特性：消耗" },
+            { id: "RES-40", name: "橫行", type: "resource", typeName: "資源端", cost: "1", img: "images/cards/橫行.PNG", silhouetteImg: "images/silhouettes/橫行.PNG", desc: "手牌中每持有 1 張「蟹化」卡牌，抽取 1 張牌，至多抽取 3 張。", recycle: "卡牌特性：保留/消耗" },
+            { id: "RES-41", name: "思維躍遷", type: "resource", typeName: "資源端", cost: "X", img: "images/cards/思維躍遷.PNG", silhouetteImg: "images/silhouettes/思維躍遷.PNG", desc: "檢索抽牌堆中能量消耗恰好為 X 的 1 張卡牌加入手牌，並使其在本回合能量消耗降低 至0 點。", recycle: "卡牌特性：消耗" },
+            { id: "RES-42", name: "代罪之軛", type: "resource", typeName: "資源端", cost: "0", img: "images/cards/代罪之軛.PNG", silhouetteImg: "images/silhouettes/代罪之軛.PNG", desc: "減少自身 5 點 HP。獲得 2 點能量。若當前持有脆弱，額外抽取 1 張卡牌。", recycle: "回收條件：在單一回合內累積受到≧10 點傷害" },
+            { id: "RES-43", name: "指令·疏導", type: "resource", typeName: "資源端", cost: "1", img: "images/cards/指令·疏導.PNG", silhouetteImg: "images/silhouettes/指令·疏導.PNG", desc: "選擇任務回收區中 1 張卡牌，無視其回收條件直接送入棄牌堆，隨後獲得等同於該卡牌基礎費用的能量。", recycle: "回收條件：抽牌堆觸發洗牌時。" },
+            { id: "RES-44", name: "流變之火", type: "resource", typeName: "資源端", cost: "2", img: "images/cards/流變之火.PNG", silhouetteImg: "images/silhouettes/流變之火.PNG", desc: "移除自身所有\"減益\"狀態。自身每有 1 種不同的\"減益\"被移除，獲得 1 點能量並抽取 1 張卡牌。", recycle: "卡牌特性：消耗" },
+            { id: "RES-45", name: "特大號爆米花桶", type: "resource", typeName: "資源端", cost: "2", img: "images/cards/特大號爆米花桶.PNG", silhouetteImg: "images/silhouettes/特大號爆米花桶.PNG", desc: "檢索抽牌堆中至多三張帶有\"爆米花\"字段的卡牌加入手牌。每以此法成功加入 1 張，獲得 1 點能量。", recycle: "卡牌特性：消耗" },
+            { id: "RES-46", name: "打卡鐘", type: "resource", typeName: "資源端", cost: "1", img: "images/cards/打卡鐘.PNG", silhouetteImg: "images/silhouettes/打卡鐘.PNG", desc: "獲得 1 點能量。若當前持有\"工作夥伴\"，改為獲得 2 點能量，並使自身獲得 1 層毅力。", recycle: "回收條件：回合結束時手牌張數恰好為 0。" },
+            { id: "RES-47", name: "神諭斷章", type: "resource", typeName: "資源端", cost: "0", img: "images/cards/神諭斷章.PNG", silhouetteImg: "images/silhouettes/神諭斷章.PNG", desc: "消耗至多 2 層祈禱。檢索抽牌堆中當前能量消耗最高的一張卡牌加入手牌；若消耗 2 層祈禱，使檢索到的卡牌在本回合能量消耗 -1。", recycle: "回收條件：在一回合內累積獲得≧4層祈禱。" },
+            { id: "RES-48", name: "蛻殼", type: "resource", typeName: "資源端", cost: "0", img: "images/cards/蛻殼.PNG", silhouetteImg: "images/silhouettes/蛻殼.PNG", desc: "從手牌中選擇並\"移除\" 1 張「蟹化」卡牌。抽取 2 張卡牌，獲得 1 點能量。", recycle: "回收條件：回合結束時手牌中完全不存在任何「蟹化」卡牌。" },
+            { id: "RES-49", name: "理型烙印", type: "resource", typeName: "資源端", cost: "X", img: "images/cards/理型烙印.PNG", silhouetteImg: "images/silhouettes/理型烙印.PNG", desc: "選擇手牌中 1 張能量消耗≦X的非資源類卡牌。生成 1 張該卡牌複製體並附加虛幻特性，隨後置於抽牌堆頂端。", recycle: "回收條件：在一回合內打出 3 張帶有虛幻或消耗特性的卡牌。" },
+            { id: "RES-50", name: "命運三女神的紡車", type: "resource", typeName: "資源端", cost: "1", img: "images/cards/命運三女神的紡車.PNG", silhouetteImg: "images/silhouettes/命運三女神的紡車.PNG", desc: "隨機觸發以下其中一種判定：【克洛托的織線】：抽取 3 張卡牌，使這3張卡牌的能量消耗+1【拉刻西斯的分配】：減少自身 10 點 HP，但使手牌中所有卡牌本回合能量消耗降低至 0。【阿特羅波斯的剪斷】：獲得 3 點能量。使自身獲得3層衰弱，持續一回合。", recycle: "回收條件：玩家當前生命值恰好為質數時。" },
+            { id: "RES-51", name: "帶來不和的金蘋果", type: "resource", typeName: "資源端", cost: "3", img: "images/cards/帶來不和的金蘋果.PNG", silhouetteImg: "images/silhouettes/帶來不和的金蘋果.PNG", desc: "隨機觸發以下其中一種判定：【赫拉的權柄】：獲得 2 點能量與 2 層力量，使敵方獲得 1 層力量。 【雅典娜的軍略】：抽取 3 張卡牌，使自身獲得 2 層堅韌。 【阿佛洛狄忒的禍水】：對敵方造成 14 點傷害，使雙方各獲得 2 層\"脆弱\"。", recycle: "卡牌特性：隨機/消耗" },
+
+            // --- 狀態端 (21 張) ---
+            { id: "STA-01", name: "自負", type: "status", typeName: "狀態端", cost: "0", img: "images/cards/自負.PNG", silhouetteImg: "images/silhouettes/自負.PNG", desc: "獲得1層所有\"增益\"效果，持續一回合；下一回合獲得1層所有\"減益\"效果，持續一回合。", recycle: "回收條件：三回合不受到傷害" },
+            { id: "STA-02", name: "簡易修整", type: "status", typeName: "狀態端", cost: "0", img: "images/cards/簡易修整.PNG", silhouetteImg: "images/silhouettes/簡易修整.PNG", desc: "解除身上(最新)的1層\"減益\"狀態", recycle: "回收條件：此卡送入棄牌堆的三回合後" },
+            { id: "STA-03", name: "潮起潮落", type: "status", typeName: "狀態端", cost: "1", img: "images/cards/潮起潮落.PNG", silhouetteImg: "images/silhouettes/潮起潮落.PNG", desc: "獲得1層所有狀態", recycle: "回收條件：使用帶有\"心如止水\"字段的卡牌" },
+            { id: "STA-04", name: "調整心態", type: "status", typeName: "狀態端", cost: "2", img: "images/cards/調整心態.PNG", silhouetteImg: "images/silhouettes/調整心態.PNG", desc: "解除身上所有\"減益\"狀態。", recycle: "回收條件：身上的\"減益\"狀態>3" },
+            { id: "STA-05", name: "凝結的雷雨雲", type: "status", typeName: "狀態端", cost: "1", img: "images/cards/凝結的雷雨雲.PNG", silhouetteImg: "images/silhouettes/凝結的雷雨雲.PNG", desc: "獲得2層所有\"減益\"狀態。將一張「液態陽光」送入抽牌堆。", recycle: "卡牌特性：消耗" },
+            { id: "STA-06", name: "液態陽光", type: "status", typeName: "狀態端", cost: "2", img: "images/cards/液態陽光.PNG", silhouetteImg: "images/silhouettes/液態陽光.PNG", desc: "獲得2層力量。將一張「希望之光」送入抽牌堆", recycle: "卡牌特性：消耗" },
+            { id: "STA-07", name: "希望之光", type: "status", typeName: "狀態端", cost: "3", img: "images/cards/希望之光.PNG", silhouetteImg: "images/silhouettes/希望之光.PNG", desc: "解除身上所有\"減益\"狀態。隨機獲得1層\"增益\"狀態", recycle: "回收條件：獲得\"減益\"狀態" },
+            { id: "STA-08", name: "血海深仇", type: "status", typeName: "狀態端", cost: "3", img: "images/cards/血海深仇.PNG", silhouetteImg: "images/silhouettes/血海深仇.PNG", desc: "為敵我雙方施加10層力量。", recycle: "回收條件：自身與敵人HP<25%時" },
+            { id: "STA-09", name: "居心叵測", type: "status", typeName: "狀態端", cost: "2", img: "images/cards/居心叵測.PNG", silhouetteImg: "images/silhouettes/居心叵測.PNG", desc: "對敵人隨機施加2層\"減益\"。", recycle: "回收條件：對持有”減益”狀態的敵人造成傷害" },
+            { id: "STA-10", name: "折磨", type: "status", typeName: "狀態端", cost: "1", img: "images/cards/折磨.PNG", silhouetteImg: "images/silhouettes/折磨.PNG", desc: "對敵人施加1層脆弱。", recycle: "回收條件：單次造成傷害≧10" },
+            { id: "STA-11", name: "加班", type: "status", typeName: "狀態端", cost: "2", img: "images/cards/加班.PNG", silhouetteImg: "images/silhouettes/加班.PNG", desc: "賦予自身3層易碎，延長\"工作夥伴\"兩回合", recycle: "回收條件：使用此卡的八回合後。" },
+            { id: "STA-12", name: "禱告", type: "status", typeName: "狀態端", cost: "1", img: "images/cards/禱告.PNG", silhouetteImg: "images/silhouettes/禱告.PNG", desc: "70%獲得1層力量，獲得1層\"祈禱\"", recycle: "卡牌特性：隨機／普通" },
+            { id: "STA-13", name: "自我傷害．以法槌質問己身", type: "status", typeName: "狀態端", cost: "0", img: "images/cards/自我傷害·以法槌質問己身.PNG", silhouetteImg: "images/silhouettes/自我傷害·以法槌質問己身.PNG", desc: "減少4點HP，隨機獲得1層狀態", recycle: "回收條件：透過卡牌效果抽取卡牌" },
+            { id: "STA-14", name: "告解", type: "status", typeName: "狀態端", cost: "1", img: "images/cards/告解.PNG", silhouetteImg: "images/silhouettes/告解.PNG", desc: "移除一層所有\"減益\"狀態，獲得2層\"祈禱\"", recycle: "回收條件：獲得至少1層堅韌" },
+            { id: "STA-15", name: "腎上腺素", type: "status", typeName: "狀態端", cost: "1", img: "images/cards/腎上腺素.PNG", silhouetteImg: "images/silhouettes/腎上腺素.PNG", desc: "獲得3層力量持續一回合。", recycle: "卡牌特性：消耗" },
+            { id: "STA-16", name: "直感", type: "status", typeName: "狀態端", cost: "0", img: "images/cards/直感.PNG", silhouetteImg: "images/silhouettes/直感.PNG", desc: "獲得1層力量。", recycle: "回收條件：對行動意圖為攻擊的敵人造成傷害" },
+            { id: "STA-17", name: "半蟹化", type: "status", typeName: "狀態端", cost: "2", img: "images/cards/半蟹化.PNG", silhouetteImg: "images/silhouettes/半蟹化.PNG", desc: "獲得5層毅力持續一回合。", recycle: "回收條件：使用「蟹化」卡牌" },
+            { id: "STA-18", name: "吐槽", type: "status", typeName: "狀態端", cost: "0", img: "images/cards/吐槽.PNG", silhouetteImg: "images/silhouettes/吐槽.PNG", desc: "對敵人施加1層\"衰弱\"，持續一回合。", recycle: "回收條件：對持有”減益”狀態的敵人造成傷害" },
+            { id: "STA-19", name: "徒勞", type: "status", typeName: "狀態端", cost: "0", img: "images/cards/徒勞.PNG", silhouetteImg: "images/silhouettes/徒勞.PNG", desc: "獲得1層力量、衰弱。", recycle: "回收條件：獲得\"增益\"與\"減益\"狀態" },
+            { id: "STA-20", name: "絕命對峙", type: "status", typeName: "狀態端", cost: "1", img: "images/cards/絕命對峙.PNG", silhouetteImg: "images/silhouettes/絕命對峙.PNG", desc: "賦予雙方1層力量，若對方為攻擊意圖，再賦予自身2層力量。", recycle: "回收條件：在對人行動意圖為攻擊的回合，不使用任何防禦牌。" },
+            { id: "STA-21", name: "暴風雨", type: "status", typeName: "狀態端", cost: "2", img: "images/cards/暴風雨.PNG", silhouetteImg: "images/silhouettes/暴風雨.PNG", desc: "賦予雙方5層衰弱。", recycle: "卡牌特性：消耗" },
+
+            // --- 能力端 (5 張) ---
+            { id: "ABL-01", name: "超憶症", type: "ability", typeName: "能力端", cost: "4", img: "images/cards/超憶症.PNG", silhouetteImg: "images/silhouettes/超憶症.PNG", desc: "賦予自身\"超憶症\"效果。\"超憶症\":回合開始時，觸發一次前一回合使用的所有卡牌效果。", recycle: "卡牌特性：消耗" },
+            { id: "ABL-02", name: "錄取通知", type: "ability", typeName: "能力端", cost: "3", img: "images/cards/錄取通知.PNG", silhouetteImg: "images/silhouettes/錄取通知.PNG", desc: "賦予自身\"工作夥伴\"效果，持續六回合。\"工作夥伴\":每次攻擊，使其傷害+8，並獲得9點防禦。", recycle: "回收條件：工作夥伴效果被移除。" },
+            { id: "ABL-03", name: "荊棘環", type: "ability", typeName: "能力端", cost: "1", img: "images/cards/荊棘環.PNG", silhouetteImg: "images/silhouettes/荊棘環.PNG", desc: "賦予自身\"荊棘\"效果。\"荊棘\":回合開始時，減少1點HP。\"荊棘\"效果可疊加。", recycle: "回收條件：累積減少10點HP" },
+            { id: "ABL-04", name: "自我鞭笞", type: "ability", typeName: "能力端", cost: "1", img: "images/cards/自我鞭笞.PNG", silhouetteImg: "images/silhouettes/自我鞭笞.PNG", desc: "賦予自身\"自我鞭笞\"效果。\"自我鞭笞\":每次HP減少時，獲得1層祈禱。", recycle: "卡牌特性：消耗" },
+            { id: "ABL-05", name: "雙向情感障礙", type: "ability", typeName: "能力端", cost: "2", img: "images/cards/雙向情感障礙.PNG", silhouetteImg: "images/silhouettes/雙向情感障礙.PNG", desc: "賦予自身\"躁鬱症\"效果。\"躁鬱症\":回合開始時，隨機獲得1層力量or脆弱", recycle: "卡牌特性：消耗/隨機" }
+        ];
+
+        // =========================================================================
+        // 2. 完整敵人圖鑑資料庫 (共 15 隻實體，圖片路徑統一指向 images/enemies/)
+        // =========================================================================
+        const enemiesData = [
+            // ==========================================
+            // 【一、 新手教學與實驗室測試實體 (5 隻)】
+            // ==========================================
+            {
+                code: "TUT-01",
+                name: "《訓練用稻草人-最甲員工》",
+                rank: "教學實體",
+                tier: "normal",
+                hp: "30 HP",
+                trauma: "無創傷槽",
+                chapter: "序章《實驗室認知校準》",
+                img: "images/enemies/最甲員工(無聊版).PNG",
+                lore: "實驗室用於測試神經同步率與基礎攻防協議的模擬靶機，僅具備最基礎的攻擊與防禦反饋邏輯。",
+                briefSkills: [
+                    { tag: "攻擊", tagClass: "atk", name: "模擬揮擊", desc: "對玩家造成 6 點基礎物理傷害。" },
+                    { tag: "增益", tagClass: "buf", name: "防禦姿態", desc: "為自身提供 6 點基礎護甲格擋。" }
+                ],
+                detailSections: [
+                    {
+                        phaseTitle: "基礎校準行動模式 // TUTORIAL PATTERN",
+                        skills: [
+                            { tag: "攻擊動作", tagClass: "atk", name: "模擬揮擊", desc: "對玩家造成 6 點傷害，用於測試防禦協議與同步能量分配。" },
+                            { tag: "增益動作", tagClass: "buf", name: "防禦姿態", desc: "獲得 6 點防禦，引導玩家計算破盾與傷害輸出。" }
+                        ]
+                    }
+                ]
+            },
+            {
+                code: "TUT-02",
+                name: "《惡性情報》",
+                rank: "普通實體",
+                tier: "normal",
+                hp: "45 HP",
+                trauma: "無創傷槽",
+                chapter: "序章《底層數據異常》",
+                img: "images/enemies/資料夾·邊線.PNG",
+                lore: "一本凌亂的機密資料夾，破損的紙頁從中散出，兩側長出紙質雙臂。正面破洞中嶄露出紅色凶光，最大的裂口形成似嘴巴的結構。",
+                briefSkills: [
+                    { tag: "攻擊", tagClass: "atk", name: "情報輸入", desc: "造成 8 點單體穩定傷害。" },
+                    { tag: "攻擊", tagClass: "atk", name: "海量灌輸", desc: "造成 20 點高爆發傷害，隨後使自身獲得 1 層脆弱。" },
+                    { tag: "妨害", tagClass: "deb", name: "惡性情報", desc: "使玩家同時獲得 1 層衰弱、易碎與脆弱。" }
+                ],
+                detailSections: [
+                    {
+                        phaseTitle: "行動意圖模組 // ACTION PATTERNS",
+                        skills: [
+                            { tag: "攻擊動作", tagClass: "atk", name: "情報輸入", desc: "對玩家造成 8 點傷害。" },
+                            { tag: "攻擊動作", tagClass: "atk", name: "海量灌輸", desc: "對玩家造成 20 點高額傷害，隨後使《惡性情報》自身獲得 1 層脆弱。" },
+                            { tag: "妨害動作", tagClass: "deb", name: "惡性情報", desc: "使玩家同時獲得 1 層衰弱、1 層易碎與 1 層脆弱。" }
+                        ]
+                    }
+                ]
+            },
+            {
+                code: "TUT-03",
+                name: "《記不可描述之物》",
+                rank: "普通實體",
+                tier: "normal",
+                hp: "60 HP",
+                trauma: "無創傷槽",
+                chapter: "序章《禁忌檔案庫》",
+                img: "images/enemies/打字機·邊線.PNG",
+                lore: "承載著不可名狀低語的加密手稿實體，字裡行間滲出扭曲的混沌代碼，會持續侵蝕觀測者的理智防線。",
+                briefSkills: [
+                    { tag: "固有", tagClass: "deb", name: "不可直視的存在", desc: "第一回合固定施放，賦予玩家【SAN值降低】（每回合獲得衰弱）。" },
+                    { tag: "攻擊", tagClass: "atk", name: "輸入 R'lyeh 文本", desc: "造成 6 點傷害；若玩家持有衰弱則追加 4 點傷害。" },
+                    { tag: "妨害", tagClass: "deb", name: "文本校閱 / 回車", desc: "驅散玩家所有正面增益，並清除自身所有狀態效果。" }
+                ],
+                detailSections: [
+                    {
+                        phaseTitle: "行動意圖模組 // ACTION PATTERNS",
+                        skills: [
+                            { tag: "固有妨害", tagClass: "deb", name: "不可直視的存在（第一回合固定使用）", desc: "賦予玩家【SAN值降低】效果：每回合開始時獲得 1 層衰弱。" },
+                            { tag: "攻擊動作", tagClass: "atk", name: "輸入 R̸̨̭̅̌͡'̷̧̗̒͆̆͠l̸̨̳̚͡y̵͎̓͢͡e̶͎̜͉҇͛͢h̷̨̖̤͌͞ͅ 文本", desc: "對玩家造成 6 點傷害；若玩家持有「衰弱」狀態，額外追加 4 點傷害（共 10 點）。" },
+                            { tag: "妨害動作", tagClass: "deb", name: "文本校閱", desc: "剝離玩家身上所有的正面「增益」狀態。" },
+                            { tag: "增益動作", tagClass: "buf", name: "回車", desc: "移除《記不可描述之物》自身身上所有的狀態效果。" }
+                        ]
+                    }
+                ]
+            },
+            {
+                code: "TUT-04",
+                name: "《(I love my job) 致你所熱愛》",
+                rank: "教學實體",
+                tier: "normal",
+                hp: "50 HP",
+                trauma: "無創傷槽",
+                chapter: "序章《職場記憶殘響》",
+                img: "images/enemies/I love my job·邊線.PNG",
+                lore: "印著「I ♥ MY JOB」字樣的破損馬克杯與加班文件聚合體，散發著強迫性的熱情與自我催眠氣息，試圖用過度勞累拖垮玩家的防線。",
+                briefSkills: [
+                    { tag: "攻擊", tagClass: "atk", name: "熱情奉獻", desc: "對玩家造成 8 點傷害，並使自身獲得 1 層力量。" },
+                    { tag: "妨害", tagClass: "deb", name: "超時工作", desc: "賦予玩家 2 層易碎與 1 層衰弱，模擬體力透支。" },
+                    { tag: "增益", tagClass: "buf", name: "自我激勵", desc: "獲得 10 點護甲並移除自身所有負面狀態。" }
+                ],
+                detailSections: [
+                    {
+                        phaseTitle: "行動意圖模組 // WORKPLACE ECHO",
+                        skills: [
+                            { tag: "攻擊動作", tagClass: "atk", name: "熱情奉獻", desc: "對玩家造成 8 點傷害，並使《(I love my job) 致你所熱愛》獲得 1 層力量。" },
+                            { tag: "妨害動作", tagClass: "deb", name: "超時工作", desc: "賦予玩家 2 層易碎與 1 層衰弱。" },
+                            { tag: "增益動作", tagClass: "buf", name: "自我激勵", desc: "獲得 10 點防禦，並清除自身所有「減益」狀態。" }
+                        ]
+                    }
+                ]
+            },
+            {
+                code: "TUT-05",
+                name: "《(荷魯斯之眼) 辨識真知的視線》",
+                rank: "教學實體",
+                tier: "normal",
+                hp: "65 HP",
+                trauma: "創傷教學",
+                chapter: "序章《真實觀測考驗》",
+                img: "images/enemies/荷魯斯之眼·邊線.PNG",
+                lore: "懸浮於意識深處的全視之眼，瞳孔中流轉著洞察一切虛妄的冷冽金光。用於教導玩家如何應對高壓凝視與創傷打斷機制。",
+                briefSkills: [
+                    { tag: "固有", tagClass: "buf", name: "全知凝視", desc: "洞察玩家出牌意圖，玩家使用技能牌時強化自身防禦。" },
+                    { tag: "攻擊", tagClass: "atk", name: "真知審判", desc: "造成 14 點高威脅精神衝擊，考驗玩家防禦與創傷打斷。" },
+                    { tag: "妨害", tagClass: "deb", name: "洞察弱點", desc: "賦予玩家 2 層脆弱，放大後續承受的傷害。" }
+                ],
+                detailSections: [
+                    {
+                        phaseTitle: "行動意圖模組 // EYE OF HORUS",
+                        skills: [
+                            { tag: "固有被動", tagClass: "buf", name: "全知凝視", desc: "每當玩家打出非攻擊類型卡牌時，《(荷魯斯之眼) 辨識真知的視線》獲得 4 點防禦。" },
+                            { tag: "攻擊動作", tagClass: "atk", name: "真知審判", desc: "凝聚視線焦點，對玩家造成 14 點高額傷害。" },
+                            { tag: "妨害動作", tagClass: "deb", name: "洞察弱點", desc: "看穿防禦破綻，賦予玩家 2 層脆弱。" }
+                        ]
+                    }
+                ]
+            },
+
+            // ==========================================
+            // 【二、 第一章《古希臘意識深層》敵人 (6 隻)】
+            // ==========================================
+            {
+                code: "CH1-01",
+                name: "《林立的學者》",
+                rank: "普通實體",
+                tier: "normal",
+                hp: "48 HP",
+                trauma: "無創傷槽",
+                chapter: "第一章《古希臘意識深層》",
+                img: "images/enemies/林立的學者·邊線.PNG",
+                lore: "徘徊在雅典廊柱間的思辨殘影，執著於無止盡的邏輯辯論與詞彙拆解，試圖用繁瑣的論證消耗入侵者的精神同步率。",
+                briefSkills: [
+                    { tag: "攻擊", tagClass: "atk", name: "理性討論", desc: "連續 7 段微量打擊（總計 7 點傷害）。" },
+                    { tag: "攻擊", tagClass: "atk", name: "激烈辯駁", desc: "單體 12 點高傷，但自身獲得 1 層衰弱。" },
+                    { tag: "增益", tagClass: "buf", name: "思考", desc: "自我淨化，移除身上所有減益狀態。" }
+                ],
+                detailSections: [
+                    {
+                        phaseTitle: "行動意圖模組 // ACTION PATTERNS",
+                        skills: [
+                            { tag: "攻擊動作", tagClass: "atk", name: "理性討論", desc: "對玩家造成 7 次 1 點傷害。" },
+                            { tag: "攻擊動作", tagClass: "atk", name: "激烈辯駁", desc: "對玩家造成 12 點傷害，使《林立的學者》獲得一層衰弱。" },
+                            { tag: "增益動作", tagClass: "buf", name: "思考", desc: "移除《林立的學者》所有「減益」狀態。" }
+                        ]
+                    }
+                ]
+            },
+            {
+                code: "CH1-02",
+                name: "《木森森林木林森木立的學者群》",
+                rank: "普通實體",
+                tier: "normal",
+                hp: "64 HP",
+                trauma: "無創傷槽",
+                chapter: "第一章《古希臘意識深層》",
+                img: "images/enemies/木森森林木林森木立的學者群·邊線.PNG",
+                lore: "由無數狂熱辯士交織而成的集體意識聚合體，喧囂的眾口能同時噴湧出混亂言論，並在自我內耗中激發出狂暴力量。",
+                briefSkills: [
+                    { tag: "攻擊", tagClass: "atk", name: "眾口難辨", desc: "15 次隨機 0~1 點高頻亂數傷害。" },
+                    { tag: "攻擊", tagClass: "atk", name: "潑士罵街", desc: "自損 10 點 HP 換取 1 層力量強化。" },
+                    { tag: "增益", tagClass: "buf", name: "集思廣益", desc: "移除自身所有減益並額外獲得 1 層力量。" }
+                ],
+                detailSections: [
+                    {
+                        phaseTitle: "行動意圖模組 // ACTION PATTERNS",
+                        skills: [
+                            { tag: "攻擊動作", tagClass: "atk", name: "眾口難辨", desc: "對玩家造成 15 次隨機 0~1 點傷害。" },
+                            { tag: "攻擊動作", tagClass: "atk", name: "潑士罵街", desc: "對《木森森林木林森木立的學者群》自身造成 10 點傷害，並使自身獲得一層力量。" },
+                            { tag: "增益動作", tagClass: "buf", name: "集思廣益", desc: "移除《木森森林木林森木立的學者群》所有「減益」狀態，使自身獲得一層力量。" }
+                        ]
+                    }
+                ]
+            },
+            {
+                code: "CH1-E1",
+                name: "《溫泉關勇士》",
+                rank: "菁英實體",
+                tier: "elite",
+                hp: "120 HP",
+                trauma: "雙型態切換",
+                chapter: "第一章《古希臘意識深層》",
+                img: "images/enemies/列奧尼達·邊線.PNG",
+                lore: "燃燒著不屈烈焰的斯巴達重裝衛士，背負著三百壯士的死戰誓言。開場即構築 300 層常駐護甲，逼迫玩家以創傷機制突破防線。",
+                briefSkills: [
+                    { tag: "固有", tagClass: "buf", name: "溫泉關的三百壯士", desc: "首回合獲得 300 層常駐不消散護甲【三百的奮鬥】。" },
+                    { tag: "妨害", tagClass: "deb", name: "ΜΟΛΩΝ ΛΑΒΕ", desc: "鎖定玩家所有非攻擊類型卡牌，逼迫正面對決。" },
+                    { tag: "創傷", tagClass: "trm", name: "防線突破 / 血戰誓言", desc: "打滿創傷可賦予玩家【突破】無視 300 層護甲直接斬殺。" }
+                ],
+                detailSections: [
+                    {
+                        phaseTitle: "行動意圖壹 // 鐵壁死守模式",
+                        skills: [
+                            { tag: "增益動作", tagClass: "buf", name: "溫泉關的三百壯士（第一回合必放）", desc: "使自身獲得三百層【三百的奮鬥】效果。", note: "【三百的奮鬥】：使《溫泉關勇士》獲得等同層數的防禦，該防禦不會因為回合結束而移除。" },
+                            { tag: "攻擊動作", tagClass: "atk", name: "斯巴達踢擊", desc: "對玩家造成 15 點傷害，並使玩家獲得一層脆弱。" },
+                            { tag: "攻擊動作", tagClass: "atk", name: "貫星長槍", desc: "對玩家造成 10 + X 點傷害（X =【三百的奮鬥】層數 / 25，向下取整）。" },
+                            { tag: "增益動作", tagClass: "buf", name: "殿軍的矜持", desc: "使《溫泉關勇士》獲得十層【三百的奮鬥】與一層力量。" },
+                            { tag: "增益動作", tagClass: "buf", name: "炎門的守護者", desc: "獲得【炎門的守護者】效果（持續一回合）：玩家使用攻擊卡牌時，使自身獲得一層力量；使用非攻擊卡牌時，獲得一層力量。" },
+                            { tag: "減益動作", tagClass: "deb", name: "ΜΟΛΩΝ ΛΑΒΕ", desc: "鎖定玩家除攻擊類型以外的卡牌使用（無法使用），並使玩家獲得一層力量，持續兩回合。" },
+                            { tag: "創傷破防", tagClass: "trm", isTrauma: true, name: "創傷值滿反應：防線突破", desc: "賦予玩家【突破】效果，持續一回合。", note: "【突破】：持有該效果時，無視【三百的奮鬥】效果（可直接攻擊《溫泉關勇士》的生命值）。" }
+                        ]
+                    },
+                    {
+                        phaseTitle: "行動意圖貳 // 輪流死戰模式",
+                        skills: [
+                            { tag: "增益動作", tagClass: "buf", name: "重整旗鼓", desc: "移除《溫泉關勇士》身上的所有減益狀態，並使【創傷值】+3。" },
+                            { tag: "減益動作", tagClass: "deb", name: "軍心動搖", desc: "減少《溫泉關勇士》三十層【三百的奮鬥】，賦予玩家三層衰弱。" },
+                            { tag: "創傷破防", tagClass: "trm", isTrauma: true, name: "創傷值滿反應：血戰誓言", desc: "賦予《溫泉關勇士》（300 -【三百的奮鬥】層數）/ 20 層力量。" }
+                        ]
+                    }
+                ]
+            },
+            {
+                code: "CH1-E2",
+                name: "《希臘 2.5 哲人》",
+                rank: "菁英實體",
+                tier: "elite",
+                hp: "150 HP",
+                trauma: "三重人格切換",
+                chapter: "第一章《古希臘意識深層》",
+                img: "images/enemies/希臘2.5哲人·邊線.PNG",
+                lore: "融合了柏拉圖、亞里斯多德與蘇格拉底三重人格的扭曲聚合體，隨創傷破防在三種哲學思辨型態間循環切換。",
+                briefSkills: [
+                    { tag: "壹型態", tagClass: "deb", name: "柏拉圖：四元素論", desc: "引發水火風土異變，動態竄改玩家手牌能耗與狀態。" },
+                    { tag: "貳型態", tagClass: "atk", name: "亞里斯多德：三段論證", desc: "依據玩家增減益持有狀態追加多段傷害（最高 12 點）。" },
+                    { tag: "參型態", tagClass: "buf", name: "蘇格拉底：反詰與分娩", desc: "自疊脆弱與創傷，藉由反詰引爆狀態層數傷害。" }
+                ],
+                detailSections: [
+                    {
+                        phaseTitle: "行動意圖其壹 // 柏拉圖人格",
+                        skills: [
+                            { tag: "攻擊動作", tagClass: "atk", name: "洞穴預言", desc: "對玩家造成 12 點傷害。若玩家持有「減益」狀態，使《希臘 2.5 哲人》獲得 1 層力量。" },
+                            { tag: "妨害動作", tagClass: "deb", name: "四元素論", desc: "對玩家隨機造成以下其中一種效果（持續一回合）：", note: "【元素：火】獲得 1 層力量，所有手牌能量消耗 -1 ｜ 【元素：水】獲得 1 層衰弱，所有手牌能量消耗 -1 ｜ 【元素：土】獲得 1 層堅韌，所有手牌能量消耗 +1 ｜ 【元素：風】獲得 1 層敏捷，所有手牌能量消耗 +1" },
+                            { tag: "隨機動作", tagClass: "buf", name: "知 who 哲也", desc: "隨機觸發：1. 移除自身所有狀態並造成移除層數×2傷害 ｜ 2. 獲得 3 層力量 ｜ 3. 自身獲得 2 層脆弱並賦予玩家 1 點能量。" },
+                            { tag: "創傷破防", tagClass: "trm", isTrauma: true, name: "創傷值滿反應：真理亦如是", desc: "對玩家造成 16 點傷害，移除雙方所有「增益」狀態。" }
+                        ]
+                    },
+                    {
+                        phaseTitle: "行動意圖其貳 // 亞里斯多德人格",
+                        skills: [
+                            { tag: "攻擊動作", tagClass: "atk", name: "三段式論證", desc: "對玩家造成 4 點傷害。若玩家持有「增益」狀態再造成 4 點傷害；若持有「減益」狀態再造成 4 點傷害（同時持有最高受到 12 點傷害）。" },
+                            { tag: "妨害動作", tagClass: "deb", name: "吾愛吾師，吾更愛真理", desc: "移除玩家所有「增益」狀態。玩家每有 1 個增益被移除，使《希臘 2.5 哲人》自身受到 6 點傷害。" },
+                            { tag: "創傷破防", tagClass: "trm", isTrauma: true, name: "創傷值滿反應：共飲毒鴆", desc: "使雙方獲得 2 層脆弱，賦予玩家 1 點能量。" }
+                        ]
+                    },
+                    {
+                        phaseTitle: "行動意圖其參 // 蘇格拉底人格",
+                        skills: [
+                            { tag: "攻擊動作", tagClass: "atk", name: "反詰", desc: "對《希臘 2.5 哲人》自身造成三次 2 點傷害。自身每有一層狀態，額外造成一次 1 點傷害。" },
+                            { tag: "妨害動作", tagClass: "deb", name: "真理的分娩", desc: "使《希臘 2.5 哲人》獲得 3 層脆弱且【創傷值】+1。" },
+                            { tag: "隨機動作", tagClass: "buf", name: "邏輯死結", desc: "隨機觸發：1. 對自身造成 1 次 10 點傷害並使【創傷值】+2 ｜ 2. 移除自身所有狀態並賦予玩家 2 點能量。" },
+                            { tag: "創傷破防", tagClass: "trm", isTrauma: true, name: "創傷值滿反應：理念重塑", desc: "移除《希臘 2.5 哲人》所有「減益」狀態，並獲得 10 層堅韌（持續一回合）。" }
+                        ]
+                    }
+                ]
+            },
+            {
+                code: "CH1-E3",
+                name: "《老人與狗 第歐根尼》",
+                rank: "菁英實體",
+                tier: "elite",
+                hp: "135 HP",
+                trauma: "雙型態切換",
+                chapter: "第一章《古希臘意識深層》",
+                img: "images/enemies/第歐根尼·邊線.PNG",
+                lore: "棲身陶罐、提燈尋找「誠實之人」的犬儒學派哲人。擅長懲罰依賴力量增益的玩家，並根據玩家增減益狀態施加不同的人格烙印。",
+                briefSkills: [
+                    { tag: "攻擊", tagClass: "atk", name: "逆潮流", desc: "根據玩家持有的「力量」層數追加多段重擊。" },
+                    { tag: "妨害", tagClass: "deb", name: "無能的弓箭手", desc: "強制使玩家所有攻擊牌傷害歸零（持續一回合）。" },
+                    { tag: "判定", tagClass: "buf", name: "燈火下的何者", desc: "依玩家狀態賦予【惡棍 / 無賴 / 誠實】三種差異化懲罰。" }
+                ],
+                detailSections: [
+                    {
+                        phaseTitle: "行動意圖壹 // 逆流嘲諷模式",
+                        skills: [
+                            { tag: "攻擊動作", tagClass: "atk", name: "逆潮流", desc: "對玩家造成 5 點傷害 1 + X 次（X 等於玩家持有力量層數）。" },
+                            { tag: "增益動作", tagClass: "buf", name: "鍛鍊", desc: "使《老人與狗 第歐根尼》獲得三層力量，並在下一回合開始時賦予我方 2 點能量。" },
+                            { tag: "增益動作", tagClass: "deb", name: "無能的弓箭手", desc: "使玩家獲得一層力量，並獲得【無能的弓箭手】效果（持續一回合）。", note: "【無能的弓箭手】：持有該效果時，所有攻擊牌只會造成 0 點傷害，並且不受任何狀態或效果影響。" },
+                            { tag: "創傷破防", tagClass: "trm", isTrauma: true, name: "創傷值滿反應：我最喜歡喝的酒是屬於別人的酒。", desc: "複製玩家所持有層數的力量，持續兩回合。" }
+                        ]
+                    },
+                    {
+                        phaseTitle: "行動意圖貳 // 犬儒審判模式",
+                        skills: [
+                            { tag: "攻擊動作", tagClass: "atk", name: "惡犬撕咬", desc: "對玩家造成 1-5 次 2 點傷害，根據實際造成傷害次數隨機賦予玩家對應數量狀態。" },
+                            { tag: "增益動作", tagClass: "buf", name: "燈火下的何者", desc: "依據玩家狀態分布賦予持續三回合的特殊判定：", note: "1. 增益 > 減益 ➔【惡棍】：每次造成傷害賦予第歐根尼一層力量 ｜ 2. 減益 > 增益 ➔【無賴】：每次受到傷害賦予第歐根尼一層力量 ｜ 3. 無狀態或持平 ➔【誠實】：每回合獲得一層力量。" },
+                            { tag: "妨害動作", tagClass: "deb", name: "犬儒主義", desc: "移除玩家所有「增益」狀態，並使所有手牌消耗 +1（持續一回合）。" },
+                            { tag: "創傷破防", tagClass: "trm", isTrauma: true, name: "創傷值滿反應：我說過別擋住我的陽光", desc: "移除《老人與狗 第歐根尼》所有「減益」狀態，賦予玩家一層力量。" }
+                        ]
+                    }
+                ]
+            },
+            {
+                code: "CH1-BOSS",
+                name: "《盜火先覺·鴆飲真理的哲人王》",
+                rank: "章節首領",
+                tier: "boss",
+                hp: "320 HP",
+                trauma: "雙型態切換",
+                chapter: "第一章終局《環形競技場》",
+                img: "images/enemies/《啟迪人智者 開蒙人智之賢》.PNG",
+                lore: "頭戴燃燒王冠、飲下真理鴆毒的意識主宰。他將無盡的「沉思」強行灌入玩家腦海，考驗玩家在認知超載與能量算力間的極限抉擇。",
+                briefSkills: [
+                    { tag: "被動", tagClass: "deb", name: "思想散佈 & 發散思考", desc: "每回合塞入「沉思」，手牌滿 5 張沉思時全手牌費用 +2。" },
+                    { tag: "半血", tagClass: "atk", name: "我思故我在", desc: "50% HP 以下啟動，回合結束依「剩餘未用能量」造成 3 倍真傷。" },
+                    { tag: "爆發", tagClass: "trm", name: "盜火的代價 & 大腦過度開發", desc: "清算剩餘能量並消耗手牌所有沉思轉化為高額衰弱。" }
+                ],
+                detailSections: [
+                    {
+                        phaseTitle: "核心被動與通用行動意圖",
+                        skills: [
+                            { tag: "固有被動", tagClass: "deb", name: "思想散佈 & 發散思考", desc: "每回合給予玩家一張「沉思」（1費，保留/消耗，持有時回合開始獲得 1 點能量）。回合開始時若玩家持有 5 張以上「沉思」，獲得【發散思考】（所有卡牌能量消耗 +2，持續一回合）。" },
+                            { tag: "半血覺醒", tagClass: "atk", name: "我思故我在（HP < 50% 觸發）", desc: "賦予玩家【我思故我在】：依據每回合結束時所剩餘能量 (X) 對玩家造成 3 * X 點真實傷害（不受任何狀態影響）。" },
+                            { tag: "通用攻擊", tagClass: "atk", name: "思辨的二律背反", desc: "對玩家造成 12 點傷害。若玩家持有「沉思」，消耗一張並賦予兩層脆弱；若未持有，賦予兩層衰弱。" },
+                            { tag: "通用妨害", tagClass: "deb", name: "推石的薛西弗斯（HP < 25% 發動）", desc: "賦予玩家【薛西弗斯】：回合開始時獲得一層衰弱（最多維持三層）。" },
+                            { tag: "通用妨害", tagClass: "deb", name: "忒修斯之船", desc: "將棄牌堆所有卡牌洗入抽牌堆。" }
+                        ]
+                    },
+                    {
+                        phaseTitle: "行動意圖壹 // 傳火啟蒙型態",
+                        skills: [
+                            { tag: "攻擊動作", tagClass: "atk", name: "師者，傳道、授業、予人以火", desc: "對玩家造成 6 點傷害，並給予玩家一張「沉思」。" },
+                            { tag: "增益動作", tagClass: "buf", name: "絕對的理性思考", desc: "使哲人王獲得等同玩家手牌中「沉思」數量的力量。" },
+                            { tag: "增益動作", tagClass: "buf", name: "芝諾的烏龜", desc: "賦予哲人王【芝諾悖論】（持續一回合）：每次受到傷害時，獲得一層堅韌。" },
+                            { tag: "妨害動作", tagClass: "deb", name: "理想國", desc: "移除雙方的所有減益狀態，使玩家下個回合開始時獲得 3 點能量。" },
+                            { tag: "創傷破防", tagClass: "trm", isTrauma: true, name: "創傷計數器滿（壹 ➔ 貳）：閉門思關", desc: "給予玩家三張「沉思」並切換至型態貳。" }
+                        ]
+                    },
+                    {
+                        phaseTitle: "行動意圖貳 // 鴆飲真理型態",
+                        skills: [
+                            { tag: "攻擊動作", tagClass: "atk", name: "盜火的代價", desc: "對玩家造成 8 點傷害，根據玩家剩餘能量，每點額外造成 4 點傷害。" },
+                            { tag: "增益動作", tagClass: "buf", name: "思考的中場休息時間", desc: "消耗玩家手牌中至多三張「沉思」，移除雙方等同消耗數量的增益狀態。" },
+                            { tag: "增益動作", tagClass: "buf", name: "思想奇點", desc: "移除玩家在本回合未消耗的所有能量，每移除 1 點能量使哲人王獲得一層力量。" },
+                            { tag: "妨害動作", tagClass: "deb", name: "大腦的過度開發", desc: "消耗玩家手牌中的所有「沉思」，並使玩家獲得等同消耗數量的衰弱（持續一回合）。" },
+                            { tag: "妨害動作", tagClass: "deb", name: "韋編三絕", desc: "使玩家手中所有的「沉思」能量消耗 +1。" },
+                            { tag: "創傷破防", tagClass: "trm", isTrauma: true, name: "創傷計數器滿（貳 ➔ 壹）：暢飲鴆理", desc: "移除哲人王所有減益狀態，使玩家在下個回合開始時獲得 2 點能量。" }
+                        ]
+                    }
+                ]
+            },
+
+            // ==========================================
+            // 【三、 特殊事件遭遇實體 (2 隻)】
+            // ==========================================
+            {
+                code: "EVT-01",
+                name: "《被遺棄之矛·阿茲里爾》",
+                rank: "事件首領",
+                tier: "event",
+                hp: "180 HP",
+                trauma: "特殊事件遭遇",
+                chapter: "特殊事件《SERVER CLOSED》",
+                img: "images/enemies/《被遺棄之矛・阿茲里爾 》(蝴蝶結).PNG",
+                lore: "來自已關閉伺服器的殘留數據騎士，身披破碎的榮耀銀白甲冑，在資料崩毀的盡頭仍忠實執行著最後的守護誓言。",
+                briefSkills: [
+                    { tag: "攻擊", tagClass: "atk", name: "此槍為貫徹亙古誓言", desc: "造成 18 點重擊；若玩家持有減益狀態則傷害降為 8 點。" },
+                    { tag: "增益", tagClass: "buf", name: "此盾為屹立永恆榮光", desc: "25% HP 以下啟動【榮光】，無效所有小於 25 點的傷害。" },
+                    { tag: "妨害", tagClass: "deb", name: "感謝您多年來的遊玩...", desc: "在伺服器關閉的告別語中移除玩家所有減益狀態。" }
+                ],
+                detailSections: [
+                    {
+                        phaseTitle: "特殊事件戰鬥行為模組",
+                        skills: [
+                            { tag: "攻擊動作", tagClass: "atk", name: "此槍為貫徹亙古誓言", desc: "對玩家造成 18 點傷害；若玩家持有「減益」狀態，則只造成 8 點傷害。" },
+                            { tag: "增益動作", tagClass: "buf", name: "此盾為屹立永恆榮光（HP < 25% 時施放）", desc: "對《被遺棄之矛·阿茲里爾》施放【榮光】效果。", note: "【榮光】：無效所有小於 25 點的傷害。" },
+                            { tag: "增益動作", tagClass: "buf", name: "榮耀為我等高照", desc: "使敵我雙方同時獲得五層力量。" },
+                            { tag: "妨害動作", tagClass: "deb", name: "「感謝您 多年來的遊玩………………祝您旅途 順利 」", desc: "移除玩家所有「減益」狀態。" }
+                        ]
+                    }
+                ]
+            },
+            {
+                code: "EVT-02",
+                name: "《扭曲的願望》",
+                rank: "事件首領",
+                tier: "event",
+                hp: "180 HP",
+                trauma: "特殊事件遭遇",
+                chapter: "特殊事件《聖誕樹枝惡魔》",
+                img: "images/enemies/扭曲的願望.PNG",
+                lore: "一個上半身發達的巨大惡魔，整體材質由樹枝構成，雙手格外尖銳。身體點綴有少許聖誕裝飾，下半身幾近消失，以模糊的樹枝連接地上的樹枝條，宛如神燈精靈一般。",
+                briefSkills: [
+                    { tag: "攻擊", tagClass: "atk", name: "許願", desc: "隨機造成 0~99 點傷害（80% 機率 0~10 點，1% 機率 26~99 點秒殺級重擊）。" },
+                    { tag: "妨害", tagClass: "deb", name: "愛如那般永恆 & 扭曲的願望", desc: "施加 99 層易碎，並能將玩家身上所有狀態隨機打散重組為其他狀態。" },
+                    { tag: "增益", tagClass: "buf", name: "甜蜜的低語", desc: "賦予玩家【甜蜜的低語】：當增益多於減益時，無視所有減益狀態。" }
+                ],
+                detailSections: [
+                    {
+                        phaseTitle: "特殊事件戰鬥行為模組 // TWISTED WISH",
+                        skills: [
+                            {
+                                tag: "攻擊動作",
+                                tagClass: "atk",
+                                name: "許願",
+                                desc: "對玩家隨機造成 0-99 點傷害。",
+                                note: "傷害機率分布：80% 為 0-10 點傷害 ｜ 15% 為 11-20 點傷害 ｜ 4% 為 21-25 點傷害 ｜ 1% 為 26-99 點傷害。"
+                            },
+                            {
+                                tag: "增益動作",
+                                tagClass: "buf",
+                                name: "甜蜜的低語",
+                                desc: "對玩家施放【甜蜜的低語】效果，持續兩回合。",
+                                note: "【甜蜜的低語】：當玩家的「增益」狀態多於「減益」狀態時，無視所有「減益」狀態。"
+                            },
+                            {
+                                tag: "妨害動作",
+                                tagClass: "deb",
+                                name: "愛如那般永恆",
+                                desc: "為玩家施加 99 層「易碎」。"
+                            },
+                            {
+                                tag: "妨害動作",
+                                tagClass: "deb",
+                                name: "扭曲的願望",
+                                desc: "隨機轉變玩家的狀態。",
+                                note: "轉變機制：將當前狀態變化為與原先不同的其他狀態（例：99 層易碎可能轉變為 21 層力量、18 層衰弱、14 層毅力、23 層脆弱、23 層堅韌）。"
+                            }
+                        ]
+                    }
+                ]
+            },
+
+            // ==========================================
+            // 【四、 第二章《失諧音樂廳》敵人 (普通 / 菁英 / Boss 各 1 隻)】
+            // ==========================================
+            {
+                code: "CH2-01",
+                name: "《鳥中籠》",
+                rank: "普通實體",
+                tier: "normal",
+                hp: "72 HP",
+                trauma: "無創傷槽",
+                chapter: "第二章《失諧音樂廳》（未實裝）",
+                img: "images/enemies/鳥中籠.PNG",
+                lore: "第二章音樂廳章節之基礎意識實體。華麗的黃銅鳥籠反過來囚禁著失控的旋律殘響，隨節拍釋放出刺耳的共鳴噪音。",
+                briefSkills: [
+                    { tag: "攻擊", tagClass: "atk", name: "失諧共鳴", desc: "隨回合節拍發出高頻音波，造成多段累積傷害。" },
+                    { tag: "妨害", tagClass: "deb", name: "音律囚籠", desc: "限制玩家單回合出牌上限，干擾連擊節奏。" },
+                    { tag: "狀態", tagClass: "buf", name: "技能組深度設計中", desc: "第二章節數值與行為樹正進行平衡調校。" }
+                ],
+                detailSections: [
+                    {
+                        phaseTitle: "第二章節企劃架構 // CONCERT HALL (WIP)",
+                        skills: [
+                            { tag: "設計概念", tagClass: "atk", name: "失諧共鳴（概念機制）", desc: "依據戰場上的「節拍計數器」發動多段音波攻擊，隨回合推進逐步提高傷害頻率。" },
+                            { tag: "設計概念", tagClass: "deb", name: "音律囚籠（概念機制）", desc: "施加【禁錮節拍】減益，若玩家未依指定順序出牌則承受額外精神負荷。" }
+                        ]
+                    }
+                ]
+            },
+            {
+                code: "CH2-E1",
+                name: "《巡迴之死》",
+                rank: "菁英實體",
+                tier: "elite",
+                hp: "165 HP",
+                trauma: "創傷上限：9",
+                chapter: "第二章《失諧音樂廳》（未實裝）",
+                img: "images/enemies/巡迴之死.PNG",
+                lore: "即將被處以火刑的聖女貞德，後方的十字架結合了鑰匙的設計，並掛有總計 14 把鑰匙，底座由血與肉塊交織構築而成。",
+                briefSkills: [
+                    { tag: "攻擊", tagClass: "atk", name: "焰刑地獄", desc: "隨機發動 0~14 次攻擊，每段傷害等同玩家減益層數，隨後清空減益。" },
+                    { tag: "妨害", tagClass: "deb", name: "錯誤的轉譯", desc: "隨機賦予玩家 10 層狀態（增益與減益占比 3:7）。" },
+                    { tag: "妨害", tagClass: "deb", name: "目的性改寫 & 非事實誣詆", desc: "強制將玩家的「增益」狀態反轉為負面狀態，並疊加隨機減益。" }
+                ],
+                detailSections: [
+                    {
+                        phaseTitle: "行動意圖模組 // DEATH OF THE TOUR",
+                        skills: [
+                            {
+                                tag: "攻擊動作",
+                                tagClass: "atk",
+                                name: "焰刑地獄",
+                                desc: "隨機對我方造成 0~14 次 X 點傷害（X 等同於我方「減益」狀態層數），隨後移除我方所有「減益」狀態。"
+                            },
+                            {
+                                tag: "減益動作",
+                                tagClass: "deb",
+                                name: "錯誤的轉譯",
+                                desc: "隨機賦予我方十層狀態（增益與減益占比 3:7）。"
+                            },
+                            {
+                                tag: "減益動作",
+                                tagClass: "deb",
+                                name: "目的性改寫",
+                                desc: "將我方「增益」狀態反轉。"
+                            },
+                            {
+                                tag: "減益動作",
+                                tagClass: "deb",
+                                name: "非事實誣詆",
+                                desc: "賦予我方隨機三層「減益」狀態。"
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                code: "CH2-BOSS",
+                name: "《萬唾之籟．自灰色指尖崩裂的不諧和音》",
+                rank: "章節首領",
+                tier: "boss",
+                hp: "380 HP",
+                trauma: "雙型態切換",
+                chapter: "第二章終局《失諧音樂廳主舞台》（未實裝）",
+                img: "images/enemies/萬唾之籟.PNG",
+                lore: "第二章音樂廳章節之終局首領。立於崩解琴鍵與無數指責低語之上的巨型演奏聚合體，指尖彈奏出撕裂理智的不諧和音。",
+                briefSkills: [
+                    { tag: "被動", tagClass: "deb", name: "不諧和音律動", desc: "隨演奏樂章切換戰場規則，干擾玩家出牌節奏。" },
+                    { tag: "妨害", tagClass: "deb", name: "萬唾低語", desc: "向牌庫混入干擾音符卡，加重認知負荷與費用負擔。" },
+                    { tag: "爆發", tagClass: "trm", name: "終曲崩裂", desc: "二階段指尖碎裂進入狂暴，清算累積的所有負面狀態。" }
+                ],
+                detailSections: [
+                    {
+                        phaseTitle: "第二章首領企劃架構 // CONCERT HALL BOSS (WIP)",
+                        skills: [
+                            { tag: "固有被動", tagClass: "deb", name: "不諧和音律動（企劃架構）", desc: "依據戰場演奏節拍切換不同環境效果，考驗玩家對出牌順序與費用分配的掌控。" },
+                            { tag: "妨害動作", tagClass: "deb", name: "萬唾低語（企劃架構）", desc: "在玩家牌庫中混入干擾手牌，抽到時強制消耗能量或施加精神負荷。" },
+                            { tag: "創傷破防", tagClass: "trm", isTrauma: true, name: "二階段轉變：指尖崩裂（企劃架構）", desc: "創傷計數器打滿後進入狂暴演奏型態，大幅強化多段精神衝擊頻率。" }
+                        ]
+                    }
+                ]
+            }
+        ];
+
+        // =========================================================================
+        // 3. 3D 翻轉與進度儲存邏輯
+        // =========================================================================
+        let unlockedList = JSON.parse(localStorage.getItem('repanos_unlocked_cards_v2')) || [
+            "ATT-01", "ATT-15", "ATT-16", "ATT-22", "DEF-01", "DEF-14", "DEF-18", "DEF-20", "RES-01", "RES-06", "RES-16", "STA-03", "ABL-02"
+        ];
+        let currentFilter = 'all';
+
+        function saveProgress() {
+            localStorage.setItem('repanos_unlocked_cards_v2', JSON.stringify(unlockedList));
+            updateProgressText();
+        }
+
+        function updateProgressText() {
+            document.getElementById('unlockProgress').innerText = `${unlockedList.length} / ${cardsData.length}`;
+        }
+
+        function flipCardElement(cardId, cardElement) {
+            const isCurrentlyUnlocked = unlockedList.includes(cardId);
+            if (isCurrentlyUnlocked) {
+                unlockedList = unlockedList.filter(id => id !== cardId);
+                cardElement.classList.add('is-flipped');
+            } else {
+                unlockedList.push(cardId);
+                cardElement.classList.remove('is-flipped');
+            }
+            saveProgress();
+        }
+
+        function toggleAllCards(unlockAll) {
+            unlockedList = unlockAll ? cardsData.map(c => c.id) : [];
+            saveProgress();
+            document.querySelectorAll('.flip-card').forEach(el => {
+                if (unlockAll) el.classList.remove('is-flipped');
+                else el.classList.add('is-flipped');
+            });
+        }
+
+        function filterCards(type, btnElement) {
+            currentFilter = type;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btnElement.classList.add('active');
+            renderCards();
+        }
+
+        function renderCards() {
+            const grid = document.getElementById('cardGrid');
+            grid.innerHTML = '';
+
+            const filtered = currentFilter === 'all' ? cardsData : cardsData.filter(c => c.type === currentFilter);
+
+            filtered.forEach(card => {
+                const isUnlocked = unlockedList.includes(card.id);
+                const cardEl = document.createElement('div');
+                cardEl.className = `flip-card ${isUnlocked ? '' : 'is-flipped'}`;
+                cardEl.onclick = () => flipCardElement(card.id, cardEl);
+
+                const fallbackImg = `https://placehold.co/300x400/121620/38bdf8?text=${encodeURIComponent(card.name)}`;
+
+                const hasCustomSilhouette = card.silhouetteImg && card.silhouetteImg.trim() !== "";
+                const backImgSrc = hasCustomSilhouette ? card.silhouetteImg : card.img;
+                const backImgClass = hasCustomSilhouette ? "" : "auto-silhouette";
+
+                cardEl.innerHTML = `
+                        <div class="flip-card-inner">
+                            <div class="flip-card-front">
+                                <div class="card-img-wrap">
+                                    <img src="${card.img}" alt="${card.name}" loading="lazy" onerror="this.src='${fallbackImg}'">
+                                    <div class="card-cost">${card.cost}</div>
+                                    <div class="card-type-tag">${card.typeName}</div>
+                                </div>
+                                <div class="card-body">
+                                    <div>
+                                        <div class="card-name">${card.name}</div>
+                                        <div class="card-desc">${card.desc}</div>
+                                        <div class="card-recycle">${card.recycle}</div>
+                                    </div>
+                                    <div class="flip-hint-btn">已解鎖（點擊翻轉為加密狀態）</div>
+                                </div>
+                            </div>
+
+                            <div class="flip-card-back">
+                                <div class="card-img-wrap">
+                                    <img src="${backImgSrc}" class="${backImgClass}" alt="Locked" loading="lazy"
+                                         onerror="this.src='${card.img}'; this.classList.add('auto-silhouette'); this.onerror=function(){this.src='${fallbackImg}'};">
+                                    <div class="lock-overlay">
+                                        <span>檔案未同步</span>
+                                    </div>
+                                    <div class="card-cost">?</div>
+                                    <div class="card-type-tag">${card.typeName}</div>
+                                </div>
+                                <div class="card-body">
+                                    <div>
+                                        <div class="card-name">未知協議</div>
+                                        <div class="card-desc">缺乏足夠的記憶數據碎片，尚未解析此協議的具體效果與消耗。</div>
+                                        <div class="card-recycle">取得渠道：探索關卡 / 精神交易所</div>
+                                    </div>
+                                    <div class="flip-hint-btn">點擊翻轉解鎖此協議</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                grid.appendChild(cardEl);
+            });
+            updateProgressText();
+        }
+
+        // =========================================================================
+        // 4. 敵人卡片網格渲染 & 彈出視窗（支援「簡述 / 詳述」即時切換與自適應滾動）
+        // =========================================================================
+        let currentModalEnemyIndex = 0;
+        let currentSkillViewMode = 'brief';
+
+        function renderEnemies() {
+            const grid = document.getElementById('enemyGrid');
+            grid.innerHTML = '';
+
+            enemiesData.forEach((enemy, index) => {
+                const fallbackImg = `https://placehold.co/280x280/090b10/f43f5e?text=${encodeURIComponent(enemy.name)}`;
+
+                const card = document.createElement('div');
+                card.className = `enemy-dossier-card ${enemy.tier}`;
+                card.onclick = () => openEnemyModal(index);
+
+                card.innerHTML = `
+                        <div class="dossier-art-box">
+                            <span class="dossier-badge ${enemy.tier}">${enemy.rank}</span>
+                            <span class="dossier-id">${enemy.code}</span>
+                            <img src="${enemy.img}" alt="${enemy.name}" loading="lazy" onerror="this.src='${fallbackImg}'">
+                        </div>
+                        <div class="dossier-body">
+                            <div>
+                                <div class="dossier-name">${enemy.name}</div>
+                                <div class="dossier-summary">${enemy.lore}</div>
+                            </div>
+                            <div class="dossier-footer">
+                                <span>${enemy.hp}</span>
+                                <span>檢視完整檔案 →</span>
+                            </div>
+                        </div>
+                    `;
+                grid.appendChild(card);
+            });
+        }
+
+        function openEnemyModal(index) {
+            currentModalEnemyIndex = index;
+            currentSkillViewMode = 'brief';
+            renderModalContent();
+            document.getElementById('enemyModal').classList.add('open');
+        }
+
+        function switchSkillMode(mode) {
+            currentSkillViewMode = mode;
+            renderModalSkillsArea();
+        }
+
+        function renderModalContent() {
+            const enemy = enemiesData[currentModalEnemyIndex];
+            const fallbackImg = `https://placehold.co/360x360/090b10/f43f5e?text=${encodeURIComponent(enemy.name)}`;
+
+            document.getElementById('modalCodeHeader').innerText = `${enemy.code} // ${enemy.rank}`;
+
+            document.getElementById('modalContentBody').innerHTML = `
+                    <div class="modal-art-pane">
+                        <img src="${enemy.img}" alt="${enemy.name}" onerror="this.src='${fallbackImg}'">
+                        <div class="modal-stats-bar">
+                            <span>生命值：<strong style="color:#fff">${enemy.hp}</strong></span>
+                            <span>特性：<strong style="color:var(--accent-cyan)">${enemy.trauma}</strong></span>
+                        </div>
+                    </div>
+                    <div class="modal-details-pane" id="modalDetailsScrollPane">
+                        <div class="modal-enemy-title">${enemy.name}</div>
+                        <div class="modal-enemy-chapter">${enemy.chapter}</div>
+                        <div class="modal-lore-box">${enemy.lore}</div>
+                        <div id="modalSkillsContainer"></div>
+                    </div>
+                `;
+
+            renderModalSkillsArea();
+        }
+
+        function renderModalSkillsArea() {
+            const enemy = enemiesData[currentModalEnemyIndex];
+            const container = document.getElementById('modalSkillsContainer');
+            if (!container) return;
+
+            let listHtml = '';
+
+            if (currentSkillViewMode === 'brief') {
+                listHtml = `<div class="modal-skill-list">` + enemy.briefSkills.map(s => `
+                        <div class="modal-skill-item">
+                            <div class="modal-skill-header">
+                                <span class="skill-tag ${s.tagClass}">${s.tag}</span>
+                                <span class="modal-skill-name">${s.name}</span>
+                            </div>
+                            <div class="modal-skill-desc">${s.desc}</div>
+                        </div>
+                    `).join('') + `</div>`;
+            } else {
+                listHtml = enemy.detailSections.map(sec => `
+                        <div class="phase-group-title">${sec.phaseTitle}</div>
+                        <div class="modal-skill-list" style="margin-bottom: 16px;">
+                            ${sec.skills.map(s => `
+                                <div class="modal-skill-item ${s.isTrauma ? 'trauma-react' : ''}">
+                                    <div class="modal-skill-header">
+                                        <span class="skill-tag ${s.tagClass}">${s.tag}</span>
+                                        <span class="modal-skill-name">${s.name}</span>
+                                    </div>
+                                    <div class="modal-skill-desc">${s.desc}</div>
+                                    ${s.note ? `<div class="sub-effect-note">${s.note}</div>` : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+                    `).join('');
+            }
+
+            container.innerHTML = `
+                    <div class="skills-toolbar">
+                        <span class="modal-skills-title">核心行動與技能模組</span>
+                        <div class="mode-switch-group">
+                            <button class="mode-btn ${currentSkillViewMode === 'brief' ? 'active' : ''}" onclick="switchSkillMode('brief')">簡述模式</button>
+                            <button class="mode-btn ${currentSkillViewMode === 'detail' ? 'active' : ''}" onclick="switchSkillMode('detail')">詳述模式</button>
+                        </div>
+                    </div>
+                    ${listHtml}
+                `;
+        }
+
+        function closeEnemyModal(event) {
+            if (event.target.id === 'enemyModal') {
+                forceCloseModal();
+            }
+        }
+
+        function forceCloseModal() {
+            document.getElementById('enemyModal').classList.remove('open');
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') forceCloseModal();
+        });
+
+        // 初始化執行
+        switchArch(0, document.querySelector('.arch-tab'));
+        renderCards();
+        renderEnemies();
+
+        // =========================================================================
+        // 5. 高效能版：常駐背景心電圖 / 認知波形光幕渲染引擎
+        // =========================================================================
+        (function initBgWave() {
+            const canvas = document.getElementById('bgWaveCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d', { alpha: true });
+
+            let width, height;
+            let phase = 0;
+            let scrollBoost = 0;
+            let isTabVisible = true;
+
+            function resize() {
+                width = canvas.width = window.innerWidth;
+                height = canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', resize, { passive: true });
+            resize();
+
+            document.addEventListener('visibilitychange', () => {
+                isTabVisible = !document.hidden;
+            });
+
+            window.addEventListener('scroll', () => {
+                scrollBoost = Math.min(scrollBoost + 0.35, 2.0);
+            }, { passive: true });
+
+            function ecgPulse(x) {
+                const cycle = ((x % 320) + 320) % 320;
+                if (cycle > 130 && cycle < 145) return -12 * Math.sin(((cycle - 130) / 15) * Math.PI);
+                if (cycle >= 155 && cycle < 162) return 18 * Math.sin(((cycle - 155) / 7) * Math.PI);
+                if (cycle >= 162 && cycle < 174) return -85 * Math.sin(((cycle - 162) / 12) * Math.PI);
+                if (cycle >= 174 && cycle < 182) return 28 * Math.sin(((cycle - 174) / 8) * Math.PI);
+                if (cycle > 200 && cycle < 225) return -16 * Math.sin(((cycle - 200) / 25) * Math.PI);
+                return Math.sin(x * 0.02) * 2;
+            }
+
+            function draw() {
+                if (!isTabVisible) {
+                    requestAnimationFrame(draw);
+                    return;
+                }
+
+                ctx.clearRect(0, 0, width, height);
+
+                const ampScale = 1 + scrollBoost * 0.45;
+                scrollBoost *= 0.92;
+                const midY = height * 0.52;
+
+                // 1. 基準線
+                ctx.strokeStyle = 'rgba(56, 189, 248, 0.06)';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(0, midY);
+                ctx.lineTo(width, midY);
+                ctx.stroke();
+
+                // 2. 紅色副波 (步長 8px，大幅減少運算量)
+                ctx.beginPath();
+                ctx.strokeStyle = 'rgba(244, 63, 94, 0.22)';
+                ctx.lineWidth = 1.5;
+                for (let x = 0; x <= width; x += 8) {
+                    const y = midY + 15 + Math.sin(x * 0.008 - phase * 0.7) * 24 * ampScale;
+                    if (x === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+
+                // 3. 青藍色主波路徑計算 (步長 5px)
+                ctx.beginPath();
+                for (let x = 0; x <= width; x += 5) {
+                    const y = midY + ecgPulse(x + phase * 55) * ampScale;
+                    if (x === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+
+                // 寬半透明外框模擬發光，取代極耗 GPU 的 shadowBlur
+                ctx.strokeStyle = 'rgba(56, 189, 248, 0.16)';
+                ctx.lineWidth = 7;
+                ctx.stroke();
+
+                // 核心亮線
+                ctx.strokeStyle = 'rgba(56, 189, 248, 0.65)';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                phase += 0.035;
+                requestAnimationFrame(draw);
+            }
+
+            draw();
+        })();
+    </script>
+</body>
+</html>
