@@ -27,6 +27,10 @@
             font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
         }
 
+        html {
+            scroll-behavior: smooth;
+        }
+
         body {
             background-color: var(--bg-dark);
             color: var(--text-main);
@@ -35,9 +39,60 @@
             font-weight: 400;
         }
 
+            /* 獨立遊戲級：動態游標微光追蹤 */
+            body::before {
+                content: "";
+                position: fixed;
+                inset: 0;
+                pointer-events: none;
+                z-index: 0;
+                background: radial-gradient( 600px circle at var(--mx, 50vw) var(--my, 50vh), rgba(56, 189, 248, 0.045), transparent 70% );
+            }
+
+            /* 認知過載全螢幕短暫故障效果 */
+            body.overload-glitch {
+                animation: glitchShake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+            }
+
+        @keyframes glitchShake {
+            0%, 100% {
+                transform: translate(0, 0);
+                filter: none;
+            }
+
+            20% {
+                transform: translate(-4px, 2px);
+                filter: hue-rotate(45deg) contrast(1.25);
+            }
+
+            40% {
+                transform: translate(4px, -2px);
+            }
+
+            60% {
+                transform: translate(-3px, -1px);
+                filter: invert(0.08);
+            }
+
+            80% {
+                transform: translate(3px, 2px);
+            }
+        }
+
         /* =========================================================
-           常駐背景流動光幕 (高效能版心電圖波形 Canvas)
+           頂部滾動進度條 & 背景心電圖光幕 Canvas
            ========================================================= */
+        #scrollProgressBar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            width: 0%;
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-gold), var(--accent-red));
+            z-index: 9999;
+            transition: width 0.08s ease-out;
+        }
+
         #bgWaveCanvas {
             position: fixed;
             top: 0;
@@ -81,7 +136,7 @@
             }
 
         /* =========================================================
-           頂部導航列 (移除 backdrop-filter 提升動態背景幀率)
+           頂部導航列
            ========================================================= */
         header {
             position: sticky;
@@ -162,26 +217,43 @@
             box-shadow: 0 0 8px #10b981;
         }
 
-        nav a {
-            color: var(--text-muted);
-            text-decoration: none;
-            margin-left: 28px;
-            font-size: 0.95rem;
-            font-weight: 500;
-            letter-spacing: 0.5px;
-            transition: color 0.2s;
+        nav {
+            display: flex;
+            align-items: center;
+            gap: 26px;
         }
 
-            nav a:hover {
-                color: var(--text-main);
+            nav a {
+                color: var(--text-muted);
+                text-decoration: none;
+                font-size: 0.95rem;
+                font-weight: 500;
+                letter-spacing: 0.5px;
+                transition: color 0.2s;
+                position: relative;
+                padding: 4px 0;
             }
 
+                nav a:hover, nav a.active-nav {
+                    color: var(--accent-cyan);
+                }
+
+                    nav a.active-nav::after {
+                        content: "";
+                        position: absolute;
+                        bottom: -2px;
+                        left: 0;
+                        width: 100%;
+                        height: 2px;
+                        background: var(--accent-cyan);
+                    }
+
         /* =========================================================
-           Hero 主視覺
+           Hero 主視覺 + 數據速覽列
            ========================================================= */
         .hero {
             position: relative;
-            padding: 100px 5% 85px;
+            padding: 95px 5% 75px;
             text-align: center;
             background: radial-gradient(ellipse at 50% 35%, rgba(25, 34, 54, 0.82) 0%, rgba(9, 11, 16, 0.85) 72%);
             border-bottom: 1px solid rgba(255, 255, 255, 0.06);
@@ -277,7 +349,7 @@
             color: #cbd5e1;
             font-weight: 300;
             letter-spacing: 1.5px;
-            margin-bottom: 36px;
+            margin-bottom: 34px;
         }
 
         .btn-group {
@@ -285,6 +357,7 @@
             gap: 16px;
             justify-content: center;
             flex-wrap: wrap;
+            margin-bottom: 48px;
         }
 
         .btn {
@@ -319,6 +392,42 @@
                 color: #fff;
                 box-shadow: none;
             }
+
+        .hero-metrics {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            max-width: 780px;
+            margin: 0 auto;
+            padding: 18px 24px;
+            background: rgba(18, 22, 32, 0.78);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+
+        .metric-item {
+            text-align: center;
+            border-right: 1px solid rgba(255, 255, 255, 0.07);
+        }
+
+            .metric-item:last-child {
+                border-right: none;
+            }
+
+        .metric-val {
+            font-family: 'Cinzel', serif;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--accent-cyan);
+            line-height: 1.2;
+        }
+
+        .metric-label {
+            font-size: 0.76rem;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            margin-top: 2px;
+        }
 
         section {
             padding: 75px 5%;
@@ -360,165 +469,668 @@
         }
 
         /* =========================================================
-           系統核心架構
+           系統核心架構：非對稱神經終端機 UX 設計 (Anti-Template Layout)
            ========================================================= */
         .arch-container {
             display: grid;
-            grid-template-columns: 330px 1fr;
-            gap: 24px;
-            background: rgba(18, 22, 32, 0.96);
-            border: 1px solid var(--border-color);
-            padding: 24px;
-            border-radius: 8px;
+            grid-template-columns: 260px 1fr;
+            gap: 36px;
+            align-items: stretch;
+            position: relative;
         }
 
         .arch-menu {
+            position: relative;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            justify-content: center;
+            gap: 22px;
+            padding-left: 22px;
+            border-left: 1px solid rgba(56, 189, 248, 0.2);
         }
 
         .arch-tab {
+            position: relative;
+            background: transparent;
+            border: none;
             text-align: left;
-            padding: 18px 20px;
-            background: #0d1018;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
             color: var(--text-muted);
             cursor: pointer;
-            transition: all 0.25s ease;
+            padding: 8px 0;
+            transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
         }
 
+            .arch-tab::before {
+                content: "";
+                position: absolute;
+                left: -27px;
+                top: 50%;
+                transform: translateY(-50%);
+                width: 9px;
+                height: 9px;
+                border-radius: 50%;
+                background: #1e293b;
+                border: 2px solid #475569;
+                transition: all 0.3s ease;
+            }
+
             .arch-tab:hover {
-                border-color: #3b4b6b;
                 color: #fff;
+                transform: translateX(6px);
             }
 
             .arch-tab.active {
-                background: rgba(56, 189, 248, 0.08);
-                border-color: var(--accent-cyan);
                 color: #fff;
+                transform: translateX(10px);
             }
 
+                .arch-tab.active::before {
+                    background: var(--accent-cyan);
+                    border-color: #fff;
+                    box-shadow: 0 0 12px var(--accent-cyan);
+                    transform: translateY(-50%) scale(1.25);
+                }
+
             .arch-tab .num {
-                font-family: 'Cinzel', serif;
-                font-size: 0.78rem;
-                color: var(--accent-cyan);
-                letter-spacing: 1.5px;
                 display: block;
-                margin-bottom: 4px;
+                font-family: 'Cinzel', serif;
+                font-size: 0.72rem;
+                letter-spacing: 2px;
+                color: var(--accent-cyan);
+                opacity: 0.7;
+                margin-bottom: 2px;
+            }
+
+            .arch-tab.active .num {
+                opacity: 1;
             }
 
             .arch-tab .title {
                 font-size: 1.05rem;
                 font-weight: 700;
+                line-height: 1.35;
             }
 
         .arch-display {
-            background: #0b0e15;
-            border: 1px solid #1e2638;
-            padding: 32px;
-            border-radius: 6px;
+            position: relative;
+            background: linear-gradient(135deg, rgba(16, 22, 34, 0.92) 0%, rgba(9, 12, 18, 0.96) 100%);
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            padding: 32px 36px;
+            clip-path: polygon(0 0, calc(100% - 24px) 0, 100% 24px, 100% 100%, 24px 100%, 0 calc(100% - 24px));
+            animation: terminalFadeIn 0.35s ease;
+        }
+
+        @keyframes terminalFadeIn {
+            from {
+                opacity: 0.4;
+                transform: translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .arch-display::after {
+            content: "NEURAL_LINK // ACTIVE";
+            position: absolute;
+            top: 12px;
+            right: 28px;
+            font-family: 'Cinzel', serif;
+            font-size: 0.68rem;
+            letter-spacing: 2px;
+            color: rgba(56, 189, 248, 0.45);
+        }
+
+        .arch-header-flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: 20px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .arch-badge {
+            display: inline-block;
+            font-family: 'Cinzel', serif;
+            font-size: 0.74rem;
+            letter-spacing: 2px;
+            color: var(--accent-gold);
+            margin-bottom: 6px;
+        }
+
+        .arch-display h3 {
+            font-size: 1.5rem;
+            color: #fff;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .arch-desc-compact {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            max-width: 640px;
+            line-height: 1.65;
+            margin-top: 6px;
+        }
+
+        /* SYSTEM 01：扇形動態手牌與非對稱戰場 HUD */
+        .battle-hud-strip {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            background: rgba(6, 9, 15, 0.7);
+            border-left: 3px solid var(--accent-red);
+            padding: 12px 18px;
+            margin-bottom: 26px;
+            flex-wrap: wrap;
+        }
+
+        .enemy-holo-target {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+            .enemy-holo-target img {
+                width: 54px;
+                height: 54px;
+                object-fit: contain;
+                filter: drop-shadow(0 0 8px rgba(244, 63, 94, 0.4));
+            }
+
+        .dual-meters {
+            display: flex;
+            gap: 24px;
+            flex: 1;
+            min-width: 240px;
+            justify-content: flex-end;
+        }
+
+        .meter-block {
+            width: 155px;
+        }
+
+        .hud-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.76rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .bar-bg {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .bar-fill-sync {
+            height: 100%;
+            background: var(--accent-cyan);
+            transition: width 0.3s ease;
+        }
+
+        .bar-fill-load {
+            height: 100%;
+            background: var(--accent-red);
+            transition: width 0.3s ease;
+        }
+
+        .fanned-hand-stage {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 18px;
+            padding: 14px 0 6px;
+            min-height: 215px;
+        }
+
+        .fan-card {
+            width: 175px;
+            background: #131926;
+            border: 1px solid #2e3d5c;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.55);
+            position: relative;
+        }
+
+            .fan-card:nth-child(1) {
+                transform: rotate(-4deg) translateY(6px);
+            }
+
+            .fan-card:nth-child(2) {
+                transform: rotate(0deg) translateY(-4px);
+                z-index: 2;
+            }
+
+            .fan-card:nth-child(3) {
+                transform: rotate(4deg) translateY(6px);
+            }
+
+            .fan-card:hover {
+                transform: rotate(0deg) translateY(-14px) scale(1.06) !important;
+                border-color: var(--accent-cyan);
+                box-shadow: 0 16px 32px rgba(56, 189, 248, 0.3);
+                z-index: 10;
+            }
+
+        .fan-card-art {
+            height: 125px;
+            position: relative;
+            background: #080a0f;
+        }
+
+            .fan-card-art img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                object-position: center 20%;
+            }
+
+        .fan-card-cost {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: rgba(9, 11, 16, 0.92);
+            color: var(--accent-cyan);
+            border: 1px solid var(--accent-cyan);
+            font-size: 0.72rem;
+            font-weight: 800;
+            padding: 1px 7px;
+            border-radius: 4px;
+        }
+
+        .fan-card-load {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(9, 11, 16, 0.92);
+            color: var(--accent-red);
+            border: 1px solid var(--accent-red);
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 1px 6px;
+            border-radius: 4px;
+        }
+
+        .fan-card-body {
+            padding: 10px 12px;
+            text-align: center;
+        }
+
+        .fan-card-name {
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .fan-card-effect {
+            font-size: 0.74rem;
+            color: var(--accent-gold);
+            margin-top: 2px;
+        }
+
+        /* 過載干擾視窗 */
+        .overload-popup {
+            position: absolute;
+            width: 245px;
+            background: #1a0b12;
+            border: 1px solid var(--accent-red);
+            box-shadow: 0 14px 35px rgba(244, 63, 94, 0.65);
+            border-radius: 4px;
+            z-index: 30;
+            animation: popIn 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes popIn {
+            from {
+                transform: scale(0.75);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .popup-bar {
+            background: var(--accent-red);
+            color: #fff;
+            font-size: 0.74rem;
+            font-weight: 700;
+            padding: 4px 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .popup-close {
+            background: #090b10;
+            color: #fff;
+            border: none;
+            padding: 2px 7px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            border-radius: 2px;
+        }
+
+        .popup-body {
+            padding: 12px;
+            font-size: 0.78rem;
+            color: #fda4af;
+            line-height: 1.45;
+        }
+
+        /* SYSTEM 02：直接點擊卡牌觸發回收／幽靈卡槽打撈 */
+        .deck-cycle-stage {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+            margin-top: 10px;
+        }
+
+        .cycle-card {
+            position: relative;
+            background: #121826;
+            border: 1px solid #2b3a57;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+            .cycle-card:hover {
+                transform: translateY(-5px);
+                border-color: var(--accent-gold);
+            }
+
+            .cycle-card.is-ghost {
+                border: 1px dashed var(--accent-red);
+                background: rgba(244, 63, 94, 0.06);
+            }
+
+                .cycle-card.is-ghost img {
+                    filter: grayscale(1) brightness(0.22);
+                }
+
+        .cycle-art {
+            height: 145px;
+            position: relative;
+        }
+
+            .cycle-art img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                object-position: center 20%;
+                transition: filter 0.35s ease;
+            }
+
+        .cycle-overlay-tag {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(9, 11, 16, 0.45);
+            color: var(--accent-red);
+            font-weight: 800;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            text-align: center;
+            padding: 10px;
+        }
+
+        .cycle-info {
+            padding: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* SYSTEM 03：破框懸浮哲學對話終端 */
+        .philosophy-stage {
+            display: grid;
+            grid-template-columns: 165px 1fr;
+            gap: 26px;
+            align-items: center;
+            margin-top: 8px;
+        }
+
+        .npc-portrait-frame {
+            position: relative;
+            text-align: center;
+        }
+
+            .npc-portrait-frame img {
+                width: 150px;
+                height: 150px;
+                object-fit: contain;
+                filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.8));
+                transition: transform 0.3s ease;
+            }
+
+            .npc-portrait-frame:hover img {
+                transform: scale(1.05);
+            }
+
+        .quote-bubble {
+            font-size: 0.95rem;
+            color: #f1f5f9;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border-left: 2px solid var(--accent-gold);
+            margin-bottom: 14px;
+            font-style: italic;
+        }
+
+        .synapse-choices {
+            display: flex;
+            flex-direction: column;
+            gap: 9px;
+        }
+
+        .synapse-btn {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 16px;
+            background: rgba(20, 27, 41, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 4px;
+            color: #cbd5e1;
+            font-size: 0.86rem;
+            cursor: pointer;
+            transition: all 0.22s ease;
+        }
+
+            .synapse-btn:hover {
+                border-color: var(--accent-gold);
+                background: rgba(234, 179, 8, 0.12);
+                color: #fff;
+                transform: translateX(6px);
+            }
+
+        .reward-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.76rem;
+            padding: 2px 8px;
+            border-radius: 3px;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+            .reward-chip img {
+                width: 20px;
+                height: 20px;
+                border-radius: 2px;
+                object-fit: cover;
+            }
+
+        /* =========================================================
+           牌組構築與【牌組代碼】分享工作台 (Deck Builder)
+           ========================================================= */
+        .deck-builder-panel {
+            background: rgba(14, 18, 28, 0.96);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            border-radius: 8px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 24px;
+        }
+
+        .deck-list-area {
             display: flex;
             flex-direction: column;
             justify-content: space-between;
         }
 
-        .arch-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            font-size: 0.78rem;
-            background: rgba(234, 179, 8, 0.12);
-            color: var(--accent-gold);
-            border: 1px solid rgba(234, 179, 8, 0.35);
-            border-radius: 4px;
-            margin-bottom: 14px;
-            width: fit-content;
-            font-weight: 500;
+        .deck-chips-wrap {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            min-height: 76px;
+            max-height: 150px;
+            overflow-y: auto;
+            padding: 10px;
+            background: #090c12;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            margin: 10px 0;
+            align-content: flex-start;
         }
 
-        .arch-display h3 {
-            font-size: 1.45rem;
+        .deck-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            background: #161e2e;
+            border: 1px solid #2e3e5e;
+            border-radius: 4px;
+            font-size: 0.8rem;
             color: #fff;
-            margin-bottom: 14px;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+
+            .deck-chip:hover {
+                border-color: var(--accent-red);
+                background: rgba(244, 63, 94, 0.15);
+            }
+
+        .deck-chip-cost {
+            color: var(--accent-cyan);
             font-weight: 700;
         }
 
-        .arch-display p {
-            color: #cbd5e1;
-            font-size: 0.98rem;
-            margin-bottom: 26px;
-            line-height: 1.8;
+        .deck-chip-count {
+            color: var(--accent-gold);
+            font-weight: 700;
+            font-size: 0.75rem;
         }
 
-        .sim-hud {
-            background: #121723;
-            border: 1px solid #253046;
-            padding: 20px;
+        .deck-code-area {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            background: #0b0e16;
+            border: 1px solid #1e283d;
             border-radius: 6px;
+            padding: 14px 16px;
         }
 
-        .hud-row {
-            margin-bottom: 14px;
-        }
-
-            .hud-row:last-child {
-                margin-bottom: 0;
-            }
-
-        .hud-label {
+        .deck-stats-strip {
             display: flex;
             justify-content: space-between;
-            font-size: 0.85rem;
-            margin-bottom: 6px;
-            font-weight: 500;
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
         }
 
-        .bar-bg {
-            width: 100%;
-            height: 8px;
-            background: #080a0f;
+        .code-io-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .deck-code-input {
+            flex: 1;
+            background: #06080c;
+            border: 1px solid var(--border-color);
             border-radius: 4px;
-            overflow: hidden;
+            padding: 7px 10px;
+            color: var(--accent-cyan);
+            font-family: monospace;
+            font-size: 0.8rem;
+            outline: none;
         }
 
-        .bar-fill-sync {
-            width: 75%;
-            height: 100%;
-            background: var(--accent-cyan);
-        }
-
-        .bar-fill-load {
-            width: 82%;
-            height: 100%;
-            background: var(--accent-red);
-            animation: pulseLoad 1.8s infinite alternate;
-        }
-
-        @keyframes pulseLoad {
-            from {
-                opacity: 0.72;
+            .deck-code-input:focus {
+                border-color: var(--accent-cyan);
             }
 
-            to {
-                opacity: 1;
-            }
+        .add-deck-btn {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            z-index: 5;
+            padding: 4px 10px;
+            background: rgba(9, 11, 16, 0.9);
+            border: 1px solid var(--accent-gold);
+            color: var(--accent-gold);
+            border-radius: 4px;
+            font-size: 0.74rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
         }
+
+            .add-deck-btn:hover {
+                background: var(--accent-gold);
+                color: #090b10;
+            }
 
         /* =========================================================
-           3D 卡牌翻轉圖鑑 (加入 content-visibility 視窗外自動休眠優化)
+           3D 卡牌翻轉圖鑑 (搜尋列、費用篩選與關鍵字高亮)
            ========================================================= */
         .controls-bar {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            margin-bottom: 28px;
+            background: rgba(18, 22, 32, 0.96);
+            padding: 18px 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+
+        .controls-top-row, .controls-bottom-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            gap: 15px;
-            margin-bottom: 28px;
-            background: rgba(18, 22, 32, 0.96);
-            padding: 16px 20px;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
+            gap: 12px;
+        }
+
+        .controls-bottom-row {
+            padding-top: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
         }
 
         .tabs {
@@ -528,14 +1140,14 @@
         }
 
         .tab-btn {
-            padding: 7px 16px;
+            padding: 7px 15px;
             background: transparent;
             border: 1px solid var(--border-color);
             border-radius: 4px;
             color: var(--text-muted);
             cursor: pointer;
             transition: 0.2s;
-            font-size: 0.9rem;
+            font-size: 0.88rem;
             font-weight: 500;
         }
 
@@ -545,11 +1157,87 @@
                 background: rgba(56, 189, 248, 0.08);
             }
 
-        .progress-box {
+        .filter-search-group {
             display: flex;
             align-items: center;
             gap: 12px;
+            flex-wrap: wrap;
+            flex: 1;
+        }
+
+        .search-input-wrap {
+            position: relative;
+            flex: 1;
+            min-width: 220px;
+            max-width: 340px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 7px 30px 7px 12px;
+            background: #0b0e15;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-main);
+            font-size: 0.86rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+            .search-input:focus {
+                border-color: var(--accent-cyan);
+            }
+
+        .search-clear-btn {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
             font-size: 0.9rem;
+            display: none;
+        }
+
+        .cost-pills {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .cost-pill-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-right: 2px;
+        }
+
+        .cost-pill {
+            padding: 4px 10px;
+            font-size: 0.78rem;
+            background: #0d1018;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: 0.2s;
+            font-weight: 600;
+        }
+
+            .cost-pill.active, .cost-pill:hover {
+                border-color: var(--accent-gold);
+                color: var(--accent-gold);
+                background: rgba(234, 179, 8, 0.1);
+            }
+
+        .progress-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.88rem;
+            flex-wrap: wrap;
         }
 
         .progress-stat {
@@ -577,6 +1265,16 @@
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(245px, 1fr));
             gap: 24px;
+        }
+
+        .empty-result-box {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 60px 20px;
+            background: rgba(18, 22, 32, 0.6);
+            border: 1px dashed var(--border-color);
+            border-radius: 8px;
+            color: var(--text-muted);
         }
 
         .flip-card {
@@ -612,6 +1310,7 @@
             flex-direction: column;
             border: 1px solid var(--border-color);
             background: var(--bg-card);
+            transition: border-color 0.2s, box-shadow 0.2s;
         }
 
             .flip-card-front:hover {
@@ -641,11 +1340,16 @@
                 width: 100%;
                 height: 100%;
                 object-fit: cover;
+                transition: transform 0.35s ease;
             }
 
-                .card-img-wrap img.auto-silhouette {
-                    filter: brightness(0) invert(0.08);
-                }
+        .flip-card-front:hover .card-img-wrap img {
+            transform: scale(1.04);
+        }
+
+        .card-img-wrap img.auto-silhouette {
+            filter: brightness(0) invert(0.08);
+        }
 
         .lock-overlay {
             position: absolute;
@@ -704,11 +1408,23 @@
             justify-content: space-between;
         }
 
+        .card-meta-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 6px;
+        }
+
         .card-name {
             font-size: 1.05rem;
             font-weight: 700;
-            margin-bottom: 6px;
             color: #fff;
+        }
+
+        .card-id-code {
+            font-family: 'Cinzel', serif;
+            font-size: 0.7rem;
+            color: var(--text-muted);
         }
 
         .flip-card-back .card-name {
@@ -717,13 +1433,28 @@
 
         .card-desc {
             font-size: 0.83rem;
-            color: var(--text-muted);
+            color: #cbd5e1;
             margin-bottom: 10px;
-            line-height: 1.48;
+            line-height: 1.5;
             display: -webkit-box;
             -webkit-line-clamp: 4;
             -webkit-box-orient: vertical;
             overflow: hidden;
+        }
+
+        .kw-dmg {
+            color: #fda4af;
+            font-weight: 600;
+        }
+
+        .kw-def {
+            color: #7dd3fc;
+            font-weight: 600;
+        }
+
+        .kw-res {
+            color: #fde047;
+            font-weight: 600;
         }
 
         .card-recycle {
@@ -746,6 +1477,11 @@
             font-size: 0.78rem;
             text-align: center;
             font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        .flip-card-front:hover .flip-hint-btn {
+            background: rgba(56, 189, 248, 0.15);
         }
 
         .flip-card-back .flip-hint-btn {
@@ -757,6 +1493,13 @@
         /* =========================================================
            敵人檔案網格 + 彈出式預覽視窗 (Modal & 簡述/詳述切換)
            ========================================================= */
+        .enemy-filter-bar {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+        }
+
         .enemy-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -950,7 +1693,7 @@
 
         .modal-top-bar {
             background: #0a0d14;
-            padding: 14px 24px;
+            padding: 12px 24px;
             border-bottom: 1px solid var(--border-color);
             display: flex;
             justify-content: space-between;
@@ -958,18 +1701,30 @@
             font-size: 0.85rem;
             color: var(--text-muted);
             flex-shrink: 0;
+            gap: 12px;
         }
 
-        .modal-close-btn {
+        .modal-nav-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .modal-nav-btn, .modal-close-btn {
             background: rgba(255, 255, 255, 0.06);
             border: 1px solid var(--border-color);
             color: var(--text-main);
-            padding: 5px 14px;
+            padding: 5px 12px;
             border-radius: 4px;
             cursor: pointer;
-            font-size: 0.82rem;
+            font-size: 0.8rem;
             transition: 0.2s;
         }
+
+            .modal-nav-btn:hover {
+                border-color: var(--accent-cyan);
+                color: var(--accent-cyan);
+            }
 
             .modal-close-btn:hover {
                 background: var(--accent-red);
@@ -1180,6 +1935,82 @@
         }
 
         /* =========================================================
+           右下角系統終端通知 (Toast HUD) 與返回頂部按鈕
+           ========================================================= */
+        #toastContainer {
+            position: fixed;
+            bottom: 76px;
+            right: 24px;
+            z-index: 950;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none;
+        }
+
+        .cyber-toast {
+            background: rgba(13, 17, 26, 0.95);
+            border: 1px solid var(--accent-cyan);
+            border-left: 4px solid var(--accent-cyan);
+            color: var(--text-main);
+            padding: 10px 16px;
+            border-radius: 4px;
+            font-size: 0.82rem;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+            animation: toastSlideIn 0.25s ease forwards;
+            max-width: 320px;
+        }
+
+            .cyber-toast.warn {
+                border-color: var(--accent-red);
+                border-left-color: var(--accent-red);
+            }
+
+        @keyframes toastSlideIn {
+            from {
+                opacity: 0;
+                transform: translateX(25px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        #backToTopBtn {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 900;
+            width: 42px;
+            height: 42px;
+            border-radius: 6px;
+            background: rgba(18, 22, 32, 0.92);
+            border: 1px solid var(--border-color);
+            color: var(--accent-cyan);
+            font-size: 1.1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.25s ease;
+        }
+
+            #backToTopBtn.visible {
+                opacity: 1;
+                pointer-events: auto;
+            }
+
+            #backToTopBtn:hover {
+                border-color: var(--accent-cyan);
+                background: var(--accent-cyan);
+                color: #090b10;
+            }
+
+        /* =========================================================
            頁尾與工作室 LOGO 專屬位置
            ========================================================= */
         footer {
@@ -1224,7 +2055,44 @@
         }
 
         @media (max-width: 850px) {
+            .hero-metrics {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
             .arch-container {
+                grid-template-columns: 1fr;
+            }
+
+            .arch-menu {
+                border-left: none;
+                border-bottom: 1px solid rgba(56, 189, 248, 0.2);
+                padding-left: 0;
+                padding-bottom: 16px;
+            }
+
+            .arch-tab::before {
+                display: none;
+            }
+
+            .fanned-hand-stage {
+                flex-direction: column;
+            }
+
+            .fan-card {
+                width: 100%;
+                transform: none !important;
+            }
+
+            .deck-cycle-stage {
+                grid-template-columns: 1fr;
+            }
+
+            .philosophy-stage {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .deck-builder-panel {
                 grid-template-columns: 1fr;
             }
 
@@ -1256,8 +2124,15 @@
 </head>
 <body>
 
+    <!-- 頂部閱讀同步進度條 -->
+    <div id="scrollProgressBar"></div>
+
     <!-- 常駐背景神經同步心電圖光幕 -->
     <canvas id="bgWaveCanvas"></canvas>
+
+    <!-- 右下角系統終端通知容器與返回頂部按鈕 -->
+    <div id="toastContainer"></div>
+    <button id="backToTopBtn" title="返回頂部" onclick="window.scrollTo({top:0, behavior:'smooth'})">↑</button>
 
     <!-- 頂部導航列 -->
     <header>
@@ -1272,11 +2147,11 @@
                 <span class="nav-brand-status"><i class="status-dot"></i> 檔案資料庫同步中 · V0.6 ALPHA</span>
             </div>
         </a>
-        <nav>
-            <a href="#features">核心玩法</a>
-            <a href="#card-dex">協議卡牌圖鑑</a>
-            <a href="#enemy-dex">異常實體圖鑑</a>
-            <a href="#team">製作團隊</a>
+        <nav id="mainNav">
+            <a href="#features" data-sec="features">核心玩法</a>
+            <a href="#card-dex" data-sec="card-dex">協議卡牌圖鑑</a>
+            <a href="#enemy-dex" data-sec="enemy-dex">異常實體圖鑑</a>
+            <a href="#team" data-sec="team">製作團隊</a>
         </nav>
     </header>
 
@@ -1300,17 +2175,37 @@
                 <a href="#card-dex" class="btn">瀏覽協議卡牌圖鑑</a>
                 <a href="#enemy-dex" class="btn btn-secondary">查閱異常實體檔案</a>
             </div>
+
+            <!-- 終端機數據速覽列 -->
+            <div class="hero-metrics">
+                <div class="metric-item">
+                    <div class="metric-val">134</div>
+                    <div class="metric-label">收錄協議卡牌</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-val">5</div>
+                    <div class="metric-label">戰術端系分類</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-val">15</div>
+                    <div class="metric-label">異常意識實體</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-val">SYNC / LOAD</div>
+                    <div class="metric-label">雙資源動態博弈</div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- 互動式系統核心架構區塊 -->
+    <!-- 非對稱神經終端機：系統核心架構區塊 -->
     <section id="features">
         <div class="section-header">
             <h2 class="section-title">
                 <small>CORE MECHANICS</small>
                 系統核心架構
             </h2>
-            <span class="section-sub">點選左側模組切換檢視遊戲核心機制</span>
+            <span class="section-sub">點選左側神經脈衝節點切換體驗遊戲實機機制</span>
         </div>
         <div class="arch-container">
             <div class="arch-menu">
@@ -1331,31 +2226,83 @@
         </div>
     </section>
 
-    <!-- 3D 翻轉卡牌圖鑑區塊 -->
+    <!-- 3D 翻轉卡牌圖鑑 + 牌組代碼分享工作台 -->
     <section id="card-dex">
         <div class="section-header">
             <div>
                 <h2 class="section-title">
-                    <small>PROTOCOL ARCHIVE</small>
-                    協議卡牌圖鑑
+                    <small>PROTOCOL ARCHIVE & DECK BUILDER</small>
+                    協議卡牌圖鑑與牌組構築
                 </h2>
-                <p class="section-sub">點擊任一張卡牌即可觸發 3D 翻轉動畫，檢視已解鎖卡面與未解鎖剪影狀態</p>
+                <p class="section-sub">點擊卡牌觸發 3D 翻轉，或點「+ 加入牌組」生成專屬分享代碼（按鍵盤 / 鍵快速搜尋）</p>
+            </div>
+        </div>
+
+        <!-- 牌組構築與【牌組代碼】分享工作台 -->
+        <div class="deck-builder-panel" id="deckBuilderPanel">
+            <div class="deck-list-area">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-weight:700; color:#fff; font-size:0.95rem;">🗂️ 自訂協議牌組構築台（點擊下方卡片右下角「+ 加入牌組」）</span>
+                    <button class="action-mini-btn" onclick="clearCustomDeck()" style="font-size:0.76rem;">清空牌組</button>
+                </div>
+                <div class="deck-chips-wrap" id="deckChipsWrap">
+                    <span style="color:var(--text-muted); font-size:0.82rem;">目前牌組為空，請從下方圖鑑挑選卡牌，或在右側貼上牌組代碼匯入...</span>
+                </div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <button class="action-mini-btn" onclick="loadPresetDeck('crab')">🦀 預設流派：蟹化無限流</button>
+                    <button class="action-mini-btn" onclick="loadPresetDeck('selfharm')">🩸 預設流派：自殘祈禱流</button>
+                </div>
+            </div>
+
+            <div class="deck-code-area">
+                <div class="deck-stats-strip">
+                    <span>牌組張數：<strong id="deckTotalCount" style="color:#fff">0</strong> / 20</span>
+                    <span>平均能耗：<strong id="deckAvgCost" style="color:var(--accent-cyan)">0.0</strong> SYNC</span>
+                </div>
+                <div style="margin-top:10px;">
+                    <div style="font-size:0.76rem; color:var(--text-muted); margin-bottom:4px;">專屬牌組代碼（可複製分享或貼上別人代碼匯入）：</div>
+                    <div class="code-io-row">
+                        <input type="text" id="deckCodeInput" class="deck-code-input" placeholder="貼上 RPN- 開頭代碼或自動產生...">
+                        <button class="action-mini-btn" onclick="copyDeckCode()" style="border-color:var(--accent-cyan); color:var(--accent-cyan);">複製代碼</button>
+                        <button class="action-mini-btn" onclick="importDeckCode()" style="border-color:var(--accent-gold); color:var(--accent-gold);">匯入</button>
+                    </div>
+                </div>
             </div>
         </div>
 
         <div class="controls-bar">
-            <div class="tabs" id="cardTabs">
-                <button class="tab-btn active" onclick="filterCards('all', this)">全部協議 (134)</button>
-                <button class="tab-btn" onclick="filterCards('attack', this)">攻擊端 (32)</button>
-                <button class="tab-btn" onclick="filterCards('defend', this)">防禦端 (25)</button>
-                <button class="tab-btn" onclick="filterCards('resource', this)">資源端 (51)</button>
-                <button class="tab-btn" onclick="filterCards('status', this)">狀態端 (21)</button>
-                <button class="tab-btn" onclick="filterCards('ability', this)">能力端 (5)</button>
+            <div class="controls-top-row">
+                <div class="tabs" id="cardTabs">
+                    <button class="tab-btn active" onclick="filterCards('all', this)">全部協議 (134)</button>
+                    <button class="tab-btn" onclick="filterCards('attack', this)">攻擊端 (32)</button>
+                    <button class="tab-btn" onclick="filterCards('defend', this)">防禦端 (25)</button>
+                    <button class="tab-btn" onclick="filterCards('resource', this)">資源端 (51)</button>
+                    <button class="tab-btn" onclick="filterCards('status', this)">狀態端 (21)</button>
+                    <button class="tab-btn" onclick="filterCards('ability', this)">能力端 (5)</button>
+                </div>
+                <div class="progress-box">
+                    <span>當前顯示：<strong id="filteredCount" style="color:#fff">134</strong> 張 ｜ 同步解鎖：<span class="progress-stat" id="unlockProgress">0 / 134</span></span>
+                    <button class="action-mini-btn" onclick="toggleAllCards(true)">全部解鎖</button>
+                    <button class="action-mini-btn" onclick="toggleAllCards(false)">全部加密</button>
+                </div>
             </div>
-            <div class="progress-box">
-                <span>同步解鎖進度：<span class="progress-stat" id="unlockProgress">0 / 0</span></span>
-                <button class="action-mini-btn" onclick="toggleAllCards(true)">全部翻至正面</button>
-                <button class="action-mini-btn" onclick="toggleAllCards(false)">全部翻至背面</button>
+
+            <div class="controls-bottom-row">
+                <div class="filter-search-group">
+                    <div class="search-input-wrap">
+                        <input type="text" id="cardSearchInput" class="search-input" placeholder="搜尋卡名、效果關鍵字（按 / 鍵快速定位）..." oninput="onCardSearchInput()">
+                        <button id="searchClearBtn" class="search-clear-btn" onclick="clearCardSearch()" title="清除搜尋">✕</button>
+                    </div>
+                    <div class="cost-pills" id="costPills">
+                        <span class="cost-pill-label">費用篩選：</span>
+                        <button class="cost-pill active" onclick="filterByCost('all', this)">全部</button>
+                        <button class="cost-pill" onclick="filterByCost('0', this)">0 費</button>
+                        <button class="cost-pill" onclick="filterByCost('1', this)">1 費</button>
+                        <button class="cost-pill" onclick="filterByCost('2', this)">2 費</button>
+                        <button class="cost-pill" onclick="filterByCost('3+', this)">3+ 費</button>
+                        <button class="cost-pill" onclick="filterByCost('X', this)">X 費</button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -1370,9 +2317,18 @@
                     <small>THREAT ENTITIES</small>
                     異常實體圖鑑
                 </h2>
-                <p class="section-sub">點擊任一實體檔案卡，可開啟檢視視窗並自由切換「簡述 / 詳述」完整技能組</p>
+                <p class="section-sub">點擊任一實體檔案卡，可開啟檢視視窗並自由切換「簡述 / 詳述」完整技能組（支援鍵盤 ← → 切換）</p>
             </div>
         </div>
+
+        <div class="enemy-filter-bar" id="enemyTabs">
+            <button class="tab-btn active" onclick="filterEnemies('all', this)">全部實體 (15)</button>
+            <button class="tab-btn" onclick="filterEnemies('normal', this)">教學與普通實體 (8)</button>
+            <button class="tab-btn" onclick="filterEnemies('elite', this)">菁英實體 (4)</button>
+            <button class="tab-btn" onclick="filterEnemies('boss', this)">章節首領 (2)</button>
+            <button class="tab-btn" onclick="filterEnemies('event', this)">特殊事件首領 (2)</button>
+        </div>
+
         <div class="enemy-grid" id="enemyGrid"></div>
     </section>
 
@@ -1381,7 +2337,11 @@
         <div class="modal-window" onclick="event.stopPropagation()">
             <div class="modal-top-bar">
                 <span id="modalCodeHeader" class="en-serif">ENTITY RECORD</span>
-                <button class="modal-close-btn" onclick="forceCloseModal()">關閉檔案 [ESC]</button>
+                <div class="modal-nav-group">
+                    <button class="modal-nav-btn" onclick="stepEnemyModal(-1)" title="快捷鍵：←">← 上一實體</button>
+                    <button class="modal-nav-btn" onclick="stepEnemyModal(1)" title="快捷鍵：→">下一實體 →</button>
+                    <button class="modal-close-btn" onclick="forceCloseModal()">關閉 [ESC]</button>
+                </div>
             </div>
             <div class="modal-content-grid" id="modalContentBody"></div>
         </div>
@@ -1401,59 +2361,281 @@
 
     <script>
         // =========================================================================
-        // 系統架構資料區
+        // UX 輔助工具：科幻終端機 Toast 通知 & 關鍵字自動染色
         // =========================================================================
+        function showToast(msg, isWarn = false) {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = `cyber-toast ${isWarn ? 'warn' : ''}`;
+            toast.innerText = msg;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.25s ease';
+                setTimeout(() => toast.remove(), 260);
+            }, 2400);
+        }
+
+        function highlightKeywords(text) {
+            if (!text) return '';
+            return text
+                .replace(/(傷害|脆弱|易碎|衰弱|減少|移除|消耗)/g, '<span class="kw-dmg">$1</span>')
+                .replace(/(防禦|護甲|堅韌|毅力|回復|保留)/g, '<span class="kw-def">$1</span>')
+                .replace(/(能量|祈禱|力量|抽牌|抽取)/g, '<span class="kw-res">$1</span>');
+        }
+
+        // =========================================================================
+        // 系統核心架構：非對稱神經終端機互動沙盒 (SYSTEM 01 ~ 03)
+        // =========================================================================
+        let simSync = 3;
+        let simLoad = 68;
+        let simEnemyHp = 48;
+        let activePopups = [];
+        let slot2Consumed = false;
+        let memoryShards = 120;
+        let selectedPhilosophyChoice = null;
+
         const archData = [
             {
-                badge: "雙資源動態博弈",
+                badge: "SYSTEM 01 // DUAL-RESOURCE COMBAT",
                 title: "雙資源與認知過載 (Sync & Load)",
-                desc: "打破傳統卡牌單一能量限制。每次出牌除了消耗同步能量 (Sync)，更會累積大腦系統負荷 (Load)。當負荷突破臨界門檻或連續打出同調卡牌時，戰場將即時爆發階梯式報錯彈窗與視覺干擾，玩家必須在出牌之餘親手排除認知阻礙。",
-                hudHtml: `
-                        <div class="sim-hud">
-                            <div class="hud-row">
-                                <div class="hud-label"><span style="color:#38bdf8">SYNC 同步能量</span><span>3 / 4</span></div>
-                                <div class="bar-bg"><div class="bar-fill-sync"></div></div>
+                desc: "直接點擊下方扇形手牌體驗出牌：每次行動同時消耗同步能量並推高認知負荷，一旦負荷突破 100% 將爆發干擾彈窗遮擋視線。",
+                renderHud: () => {
+                    const popupsHtml = activePopups.map(p => `
+                            <div class="overload-popup" style="top:${p.top}px; left:${p.left}px;">
+                                <div class="popup-bar">
+                                    <span>⚠️ ${p.code}</span>
+                                    <button class="popup-close" onclick="closeOverloadPopup(${p.id})">✕</button>
+                                </div>
+                                <div class="popup-body">${p.msg}</div>
                             </div>
-                            <div class="hud-row">
-                                <div class="hud-label"><span style="color:#f43f5e">LOAD 認知負荷（臨界狀態：即將觸發視窗干擾）</span><span>82%</span></div>
-                                <div class="bar-bg"><div class="bar-fill-load"></div></div>
+                        `).join('');
+
+                    return `
+                        <div style="position:relative;">
+                            ${popupsHtml}
+                            <div class="battle-hud-strip">
+                                <div class="enemy-holo-target">
+                                    <img src="images/enemies/林立的學者·邊線.PNG" alt="林立的學者" onerror="this.style.display='none'">
+                                    <div>
+                                        <div style="font-size:0.86rem; font-weight:700; color:#fff;">林立的學者</div>
+                                        <div style="font-size:0.75rem; color:var(--accent-red); font-weight:700;">HP ${simEnemyHp} / 48</div>
+                                    </div>
+                                </div>
+                                <div class="dual-meters">
+                                    <div class="meter-block">
+                                        <div class="hud-label"><span style="color:#38bdf8">SYNC 能量</span><span>${simSync} / 4</span></div>
+                                        <div class="bar-bg"><div class="bar-fill-sync" style="width:${(simSync / 4) * 100}%"></div></div>
+                                    </div>
+                                    <div class="meter-block">
+                                        <div class="hud-label"><span style="color:#f43f5e">LOAD 負荷</span><span>${simLoad}%</span></div>
+                                        <div class="bar-bg"><div class="bar-fill-load" style="width:${Math.min(simLoad, 100)}%"></div></div>
+                                    </div>
+                                </div>
+                                <button class="action-mini-btn" onclick="resetSimBattle()" style="font-size:0.75rem;">↻ 重置</button>
                             </div>
-                        </div>`
+
+                            <div class="fanned-hand-stage">
+                                <div class="fan-card" onclick="playSimCard('斯巴達式踢擊', 1, 22, 15)">
+                                    <div class="fan-card-art">
+                                        <img src="images/cards/斯巴達式踢擊.PNG" alt="斯巴達式踢擊">
+                                        <span class="fan-card-cost">⚡1</span>
+                                        <span class="fan-card-load">+22%</span>
+                                    </div>
+                                    <div class="fan-card-body">
+                                        <div class="fan-card-name">斯巴達式踢擊</div>
+                                        <div class="fan-card-effect">造成 15 傷害</div>
+                                    </div>
+                                </div>
+                                <div class="fan-card" onclick="playSimCard('伊卡洛斯的傲慢', 2, 38, 23)">
+                                    <div class="fan-card-art">
+                                        <img src="images/cards/伊卡洛斯的傲慢.PNG" alt="伊卡洛斯的傲慢">
+                                        <span class="fan-card-cost">⚡2</span>
+                                        <span class="fan-card-load">+38%</span>
+                                    </div>
+                                    <div class="fan-card-body">
+                                        <div class="fan-card-name">伊卡洛斯的傲慢</div>
+                                        <div class="fan-card-effect">造成 23 爆發重擊</div>
+                                    </div>
+                                </div>
+                                <div class="fan-card" onclick="playSimCard('思緒整理', 0, -30, 0)">
+                                    <div class="fan-card-art">
+                                        <img src="images/cards/思緒整理.PNG" alt="思緒整理">
+                                        <span class="fan-card-cost" style="color:#10b981; border-color:#10b981;">⚡0</span>
+                                        <span class="fan-card-load" style="color:#38bdf8; border-color:#38bdf8;">-30%</span>
+                                    </div>
+                                    <div class="fan-card-body">
+                                        <div class="fan-card-name">思緒整理</div>
+                                        <div class="fan-card-effect" style="color:#38bdf8;">冷卻認知負荷</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>`;
+                }
             },
             {
-                badge: "牌庫生態閉環",
+                badge: "SYSTEM 02 // DECK ECOLOGY & SALVAGE",
                 title: "動態回收條件與永久消耗",
-                desc: "高階特質協議自帶獨特的局內「回收條件」（如單回合造成指定傷害、維持多層狀態）。若打完未能達成回收條件，該卡牌將從牌庫中永久消耗，並於編輯器留下紅色幽靈卡槽，玩家需前往精神交易所花費資源將記憶碎片打撈購回。",
-                hudHtml: `
-                        <div class="sim-hud" style="font-size:0.88rem; color:#eab308;">
-                            <div>狀態檢核：特質協議《伊卡洛斯的傲慢》已使用</div>
-                            <div style="color:#f43f5e; margin-top:6px;">回收條件未達成：已從主牌庫移除（登記至精神交易所打撈池）</div>
+                desc: "直接點擊中間的特質協議卡牌進行測試：未達成回收條件將永久消耗並留下紅色幽靈槽；再次點擊即可於精神交易所消耗碎片打撈。",
+                renderHud: () => `
+                        <div>
+                            <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:var(--text-muted); margin-bottom:8px;">
+                                <span>點擊特質協議卡片切換狀態</span>
+                                <span>記憶碎片：<strong style="color:var(--accent-gold)">💎 ${memoryShards}</strong></span>
+                            </div>
+                            <div class="deck-cycle-stage">
+                                <div class="cycle-card" onclick="showToast('✨ 《打擊》為普通特性，使用後直接進入棄牌堆循環。')">
+                                    <div class="cycle-art"><img src="images/cards/打擊.PNG" alt="打擊"></div>
+                                    <div class="cycle-info">
+                                        <span style="font-weight:700; font-size:0.88rem; color:#fff;">打擊</span>
+                                        <span style="font-size:0.74rem; color:var(--accent-cyan);">普通循環</span>
+                                    </div>
+                                </div>
+
+                                <div class="cycle-card ${slot2Consumed ? 'is-ghost' : ''}" onclick="${slot2Consumed ? 'salvageGhostCard()' : 'simCardRecycle(false)'}">
+                                    <div class="cycle-art">
+                                        <img src="images/cards/伊卡洛斯的傲慢.PNG" alt="伊卡洛斯的傲慢">
+                                        ${slot2Consumed ? '<div class="cycle-overlay-tag"><span>GHOST SLOT</span><span style="font-size:0.72rem; color:#eab308; margin-top:4px;">點擊花費 40 碎片打撈</span></div>' : '<div class="cycle-overlay-tag" style="background:rgba(9,11,16,0.2); color:#fff; font-size:0.75rem;">點擊模擬未達成條件</div>'}
+                                    </div>
+                                    <div class="cycle-info">
+                                        <span style="font-weight:700; font-size:0.88rem; color:${slot2Consumed ? 'var(--accent-red)' : '#fff'};">伊卡洛斯的傲慢</span>
+                                        <span style="font-size:0.74rem; color:${slot2Consumed ? 'var(--accent-red)' : 'var(--accent-gold)'};">${slot2Consumed ? '已永久消耗' : '特質協議'}</span>
+                                    </div>
+                                </div>
+
+                                <div class="cycle-card" onclick="simCardRecycle(true)">
+                                    <div class="cycle-art"><img src="images/cards/靈光一閃.PNG" alt="靈光一閃"></div>
+                                    <div class="cycle-info">
+                                        <span style="font-weight:700; font-size:0.88rem; color:#fff;">靈光一閃</span>
+                                        <span style="font-size:0.74rem; color:var(--accent-cyan);">回歸特性</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>`
             },
             {
-                badge: "敘事與機制連動",
+                badge: "SYSTEM 03 // PHILOSOPHICAL ENCOUNTER",
                 title: "哲學事件與人格抉擇",
-                desc: "深入古希臘意識深層，與第歐根尼、薛西弗斯等哲學意象展開交鋒。玩家在事件中的每一次道德或邏輯抉擇，都將直接轉化為對應的專屬協議卡牌或永久改變牌組構築方向，讓敘事與戰鬥策略緊密相扣。",
-                hudHtml: `
-                        <div class="sim-hud" style="font-size:0.88rem; color:#38bdf8;">
-                            <div>事件紀錄：雅典學院的公開辯論</div>
-                            <div style="color:#cbd5e1; margin-top:6px;">抉擇結果：獲得專屬協議卡牌《靈光一閃》與《理性思考》</div>
+                desc: "與古希臘意識深層的哲學意象交鋒，點擊突觸分支選項，將人格抉擇直接轉化為專屬協議卡牌：",
+                renderHud: () => `
+                        <div class="philosophy-stage">
+                            <div class="npc-portrait-frame">
+                                <img src="images/enemies/第歐根尼·邊線.PNG" alt="第歐根尼" onerror="this.style.display='none'">
+                                <div style="font-size:0.82rem; font-weight:700; color:var(--accent-gold); margin-top:4px;">第歐根尼</div>
+                            </div>
+                            <div>
+                                <div class="quote-bubble">「卸下所有規則與護甲後，你還剩下什麼？」</div>
+                                <div class="synapse-choices">
+                                    <button class="synapse-btn" onclick="choosePhilosophy(0)">
+                                        <span>01 // 理性拆解邏輯悖論</span>
+                                        <span class="reward-chip" style="color:var(--accent-cyan);"><img src="images/cards/理性思考.PNG"> 獲得《理性思考》</span>
+                                    </button>
+                                    <button class="synapse-btn" onclick="choosePhilosophy(1)">
+                                        <span>02 // 擁抱痛苦與狂熱代價</span>
+                                        <span class="reward-chip" style="color:var(--accent-red);"><img src="images/cards/狂戰血祭.PNG"> 獲得《狂戰血祭》</span>
+                                    </button>
+                                    <button class="synapse-btn" onclick="choosePhilosophy(2)">
+                                        <span>03 // 犬儒式沉默轉身離去</span>
+                                        <span class="reward-chip" style="color:var(--accent-gold);"><img src="images/cards/武器化無能.PNG"> 獲得《武器化無能》</span>
+                                    </button>
+                                </div>
+                                ${selectedPhilosophyChoice ? `<div style="margin-top:10px; font-size:0.8rem; color:var(--accent-cyan);">➔ ${selectedPhilosophyChoice}</div>` : ''}
+                            </div>
                         </div>`
             }
         ];
 
         function switchArch(index, btn) {
             document.querySelectorAll('.arch-tab').forEach(t => t.classList.remove('active'));
-            btn.classList.add('active');
+            if (btn) btn.classList.add('active');
             const item = archData[index];
             document.getElementById('archDisplay').innerHTML = `
-                    <div>
-                        <div class="arch-badge">${item.badge}</div>
-                        <h3>${item.title}</h3>
-                        <p>${item.desc}</p>
+                    <div class="arch-header-flex">
+                        <div>
+                            <div class="arch-badge">${item.badge}</div>
+                            <h3>${item.title}</h3>
+                            <p class="arch-desc-compact">${item.desc}</p>
+                        </div>
                     </div>
-                    ${item.hudHtml}
+                    ${item.renderHud()}
                 `;
+        }
+
+        function playSimCard(name, cost, loadDelta, dmg) {
+            if (activePopups.length > 0) {
+                showToast("⚠️ 請先點擊關閉畫面上的過載報錯視窗！", true);
+                return;
+            }
+            if (simSync < cost) {
+                showToast("[SYSTEM] SYNC 同步能量不足，請點擊「↻ 重置」！", true);
+                return;
+            }
+            simSync -= cost;
+            simLoad = Math.max(0, simLoad + loadDelta);
+            simEnemyHp = Math.max(0, simEnemyHp - dmg);
+            if (simEnemyHp === 0) simEnemyHp = 48;
+
+            if (simLoad >= 100) {
+                document.body.classList.remove('overload-glitch');
+                void document.body.offsetWidth;
+                document.body.classList.add('overload-glitch');
+                activePopups = [
+                    { id: 1, top: 28, left: 30, code: "ERR_0x89 // 認知過載", msg: "突觸緩衝區溢位！手牌神經連結已遭干擾鎖定。" },
+                    { id: 2, top: 72, left: 190, code: "SYS_ALERT // 思緒雜訊", msg: "檢測到高負荷脈衝，請手動關閉此視窗以恢復控制！" }
+                ];
+                showToast("⚠️ [OVERLOAD] 認知負荷突破 100%！請手動排除干擾彈窗！", true);
+            } else {
+                showToast(`[PLAY] 打出《${name}》，當前認知負荷 ${simLoad}%`);
+            }
+            switchArch(0, document.querySelectorAll('.arch-tab')[0]);
+        }
+
+        function closeOverloadPopup(id) {
+            activePopups = activePopups.filter(p => p.id !== id);
+            if (activePopups.length === 0) {
+                simLoad = 65;
+                showToast("[CLEAR] 所有認知干擾視窗已排除，神經連結恢復穩定。");
+            }
+            switchArch(0, document.querySelectorAll('.arch-tab')[0]);
+        }
+
+        function resetSimBattle() {
+            simSync = 3;
+            simLoad = 68;
+            simEnemyHp = 48;
+            activePopups = [];
+            switchArch(0, document.querySelectorAll('.arch-tab')[0]);
+            showToast("[RESET] 模擬戰場已重置為初始回合狀態。");
+        }
+
+        function simCardRecycle(success) {
+            if (success) {
+                showToast("✨ [RECYCLE] 達成單回合受傷條件！協議卡牌已安全回收至棄牌堆。");
+            } else {
+                slot2Consumed = true;
+                showToast("💥 [CONSUMED] 未達成回收條件，卡牌已永久消耗並留下紅色幽靈槽！", true);
+                switchArch(1, document.querySelectorAll('.arch-tab')[1]);
+            }
+        }
+
+        function salvageGhostCard() {
+            if (memoryShards < 40) memoryShards = 120;
+            memoryShards -= 40;
+            slot2Consumed = false;
+            showToast("🔮 [SALVAGE] 已從精神交易所成功打撈並重構《伊卡洛斯的傲慢》！");
+            switchArch(1, document.querySelectorAll('.arch-tab')[1]);
+        }
+
+        function choosePhilosophy(choiceIdx) {
+            const outcomes = [
+                "抉擇結果：你冷靜拆解了悖論，獲得防禦端協議《理性思考》並清除 1 層認知負荷。",
+                "抉擇結果：你接納了痛苦與代價，獲得高爆發攻擊端協議《狂戰血祭》。",
+                "抉擇結果：你放棄了無謂的防備，獲得特殊防禦協議《武器化無能》。"
+            ];
+            selectedPhilosophyChoice = outcomes[choiceIdx];
+            showToast("[EVENT] 人格抉擇已記錄，牌組構築方向已同步更新。");
+            switchArch(2, document.querySelectorAll('.arch-tab')[2]);
         }
 
         // =========================================================================
@@ -1606,12 +2788,9 @@
         ];
 
         // =========================================================================
-        // 2. 完整敵人圖鑑資料庫 (共 15 隻實體，圖片路徑統一指向 images/enemies/)
+        // 2. 完整敵人圖鑑資料庫 (共 15 隻實體)
         // =========================================================================
         const enemiesData = [
-            // ==========================================
-            // 【一、 新手教學與實驗室測試實體 (5 隻)】
-            // ==========================================
             {
                 code: "TUT-01",
                 name: "《訓練用稻草人-最甲員工》",
@@ -1741,10 +2920,6 @@
                     }
                 ]
             },
-
-            // ==========================================
-            // 【二、 第一章《古希臘意識深層》敵人 (6 隻)】
-            // ==========================================
             {
                 code: "CH1-01",
                 name: "《林立的學者》",
@@ -1964,10 +3139,6 @@
                     }
                 ]
             },
-
-            // ==========================================
-            // 【三、 特殊事件遭遇實體 (2 隻)】
-            // ==========================================
             {
                 code: "EVT-01",
                 name: "《被遺棄之矛·阿茲里爾》",
@@ -2014,41 +3185,14 @@
                     {
                         phaseTitle: "特殊事件戰鬥行為模組 // TWISTED WISH",
                         skills: [
-                            {
-                                tag: "攻擊動作",
-                                tagClass: "atk",
-                                name: "許願",
-                                desc: "對玩家隨機造成 0-99 點傷害。",
-                                note: "傷害機率分布：80% 為 0-10 點傷害 ｜ 15% 為 11-20 點傷害 ｜ 4% 為 21-25 點傷害 ｜ 1% 為 26-99 點傷害。"
-                            },
-                            {
-                                tag: "增益動作",
-                                tagClass: "buf",
-                                name: "甜蜜的低語",
-                                desc: "對玩家施放【甜蜜的低語】效果，持續兩回合。",
-                                note: "【甜蜜的低語】：當玩家的「增益」狀態多於「減益」狀態時，無視所有「減益」狀態。"
-                            },
-                            {
-                                tag: "妨害動作",
-                                tagClass: "deb",
-                                name: "愛如那般永恆",
-                                desc: "為玩家施加 99 層「易碎」。"
-                            },
-                            {
-                                tag: "妨害動作",
-                                tagClass: "deb",
-                                name: "扭曲的願望",
-                                desc: "隨機轉變玩家的狀態。",
-                                note: "轉變機制：將當前狀態變化為與原先不同的其他狀態（例：99 層易碎可能轉變為 21 層力量、18 層衰弱、14 層毅力、23 層脆弱、23 層堅韌）。"
-                            }
+                            { tag: "攻擊動作", tagClass: "atk", name: "許願", desc: "對玩家隨機造成 0-99 點傷害。", note: "傷害機率分布：80% 為 0-10 點傷害 ｜ 15% 為 11-20 點傷害 ｜ 4% 為 21-25 點傷害 ｜ 1% 為 26-99 點傷害。" },
+                            { tag: "增益動作", tagClass: "buf", name: "甜蜜的低語", desc: "對玩家施放【甜蜜的低語】效果，持續兩回合。", note: "【甜蜜的低語】：當玩家的「增益」狀態多於「減益」狀態時，無視所有「減益」狀態。" },
+                            { tag: "妨害動作", tagClass: "deb", name: "愛如那般永恆", desc: "為玩家施加 99 層「易碎」。" },
+                            { tag: "妨害動作", tagClass: "deb", name: "扭曲的願望", desc: "隨機轉變玩家的狀態。", note: "轉變機制：將當前狀態變化為與原先不同的其他狀態（例：99 層易碎可能轉變為 21 層力量、18 層衰弱、14 層毅力、23 層脆弱、23 層堅韌）。" }
                         ]
                     }
                 ]
             },
-
-            // ==========================================
-            // 【四、 第二章《失諧音樂廳》敵人 (普通 / 菁英 / Boss 各 1 隻)】
-            // ==========================================
             {
                 code: "CH2-01",
                 name: "《鳥中籠》",
@@ -2093,30 +3237,10 @@
                     {
                         phaseTitle: "行動意圖模組 // DEATH OF THE TOUR",
                         skills: [
-                            {
-                                tag: "攻擊動作",
-                                tagClass: "atk",
-                                name: "焰刑地獄",
-                                desc: "隨機對我方造成 0~14 次 X 點傷害（X 等同於我方「減益」狀態層數），隨後移除我方所有「減益」狀態。"
-                            },
-                            {
-                                tag: "減益動作",
-                                tagClass: "deb",
-                                name: "錯誤的轉譯",
-                                desc: "隨機賦予我方十層狀態（增益與減益占比 3:7）。"
-                            },
-                            {
-                                tag: "減益動作",
-                                tagClass: "deb",
-                                name: "目的性改寫",
-                                desc: "將我方「增益」狀態反轉。"
-                            },
-                            {
-                                tag: "減益動作",
-                                tagClass: "deb",
-                                name: "非事實誣詆",
-                                desc: "賦予我方隨機三層「減益」狀態。"
-                            }
+                            { tag: "攻擊動作", tagClass: "atk", name: "焰刑地獄", desc: "隨機對我方造成 0~14 次 X 點傷害（X 等同於我方「減益」狀態層數），隨後移除我方所有「減益」狀態。" },
+                            { tag: "減益動作", tagClass: "deb", name: "錯誤的轉譯", desc: "隨機賦予我方十層狀態（增益與減益占比 3:7）。" },
+                            { tag: "減益動作", tagClass: "deb", name: "目的性改寫", desc: "將我方「增益」狀態反轉。" },
+                            { tag: "減益動作", tagClass: "deb", name: "非事實誣詆", desc: "賦予我方隨機三層「減益」狀態。" }
                         ]
                     }
                 ]
@@ -2150,12 +3274,14 @@
         ];
 
         // =========================================================================
-        // 3. 3D 翻轉與進度儲存邏輯
+        // 3. 3D 翻轉、搜尋、費用篩選與進度儲存邏輯
         // =========================================================================
         let unlockedList = JSON.parse(localStorage.getItem('repanos_unlocked_cards_v2')) || [
             "ATT-01", "ATT-15", "ATT-16", "ATT-22", "DEF-01", "DEF-14", "DEF-18", "DEF-20", "RES-01", "RES-06", "RES-16", "STA-03", "ABL-02"
         ];
         let currentFilter = 'all';
+        let currentCostFilter = 'all';
+        let currentSearchQuery = '';
 
         function saveProgress() {
             localStorage.setItem('repanos_unlocked_cards_v2', JSON.stringify(unlockedList));
@@ -2166,14 +3292,16 @@
             document.getElementById('unlockProgress').innerText = `${unlockedList.length} / ${cardsData.length}`;
         }
 
-        function flipCardElement(cardId, cardElement) {
-            const isCurrentlyUnlocked = unlockedList.includes(cardId);
+        function flipCardElement(card, cardElement) {
+            const isCurrentlyUnlocked = unlockedList.includes(card.id);
             if (isCurrentlyUnlocked) {
-                unlockedList = unlockedList.filter(id => id !== cardId);
+                unlockedList = unlockedList.filter(id => id !== card.id);
                 cardElement.classList.add('is-flipped');
+                showToast(`[LOCK] 協議 ${card.id} 《${card.name}》已轉為加密狀態`, true);
             } else {
-                unlockedList.push(cardId);
+                unlockedList.push(card.id);
                 cardElement.classList.remove('is-flipped');
+                showToast(`[SYNC] 協議 ${card.id} 《${card.name}》已同步解鎖`);
             }
             saveProgress();
         }
@@ -2185,12 +3313,35 @@
                 if (unlockAll) el.classList.remove('is-flipped');
                 else el.classList.add('is-flipped');
             });
+            showToast(unlockAll ? `[SYNC] 已全數解鎖 134 張記憶協議檔案` : `[LOCK] 已將全部協議檔案重置為加密剪影狀態`, !unlockAll);
         }
 
         function filterCards(type, btnElement) {
             currentFilter = type;
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('#cardTabs .tab-btn').forEach(b => b.classList.remove('active'));
             btnElement.classList.add('active');
+            renderCards();
+        }
+
+        function filterByCost(costVal, btnElement) {
+            currentCostFilter = costVal;
+            document.querySelectorAll('#costPills .cost-pill').forEach(b => b.classList.remove('active'));
+            btnElement.classList.add('active');
+            renderCards();
+        }
+
+        function onCardSearchInput() {
+            const input = document.getElementById('cardSearchInput');
+            currentSearchQuery = input.value.trim().toLowerCase();
+            document.getElementById('searchClearBtn').style.display = currentSearchQuery ? 'block' : 'none';
+            renderCards();
+        }
+
+        function clearCardSearch() {
+            const input = document.getElementById('cardSearchInput');
+            input.value = '';
+            currentSearchQuery = '';
+            document.getElementById('searchClearBtn').style.display = 'none';
             renderCards();
         }
 
@@ -2198,13 +3349,39 @@
             const grid = document.getElementById('cardGrid');
             grid.innerHTML = '';
 
-            const filtered = currentFilter === 'all' ? cardsData : cardsData.filter(c => c.type === currentFilter);
+            const filtered = cardsData.filter(c => {
+                const matchType = currentFilter === 'all' || c.type === currentFilter;
+                let matchCost = true;
+                if (currentCostFilter !== 'all') {
+                    if (currentCostFilter === '3+') {
+                        const num = parseInt(c.cost, 10);
+                        matchCost = !isNaN(num) && num >= 3;
+                    } else {
+                        matchCost = c.cost === currentCostFilter;
+                    }
+                }
+                const matchQuery = !currentSearchQuery ||
+                    c.name.toLowerCase().includes(currentSearchQuery) ||
+                    c.desc.toLowerCase().includes(currentSearchQuery) ||
+                    c.recycle.toLowerCase().includes(currentSearchQuery) ||
+                    c.id.toLowerCase().includes(currentSearchQuery);
+
+                return matchType && matchCost && matchQuery;
+            });
+
+            document.getElementById('filteredCount').innerText = filtered.length;
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `<div class="empty-result-box">查無符合條件的協議卡牌，請嘗試放寬篩選條件或清除關鍵字。</div>`;
+                updateProgressText();
+                return;
+            }
 
             filtered.forEach(card => {
                 const isUnlocked = unlockedList.includes(card.id);
                 const cardEl = document.createElement('div');
                 cardEl.className = `flip-card ${isUnlocked ? '' : 'is-flipped'}`;
-                cardEl.onclick = () => flipCardElement(card.id, cardEl);
+                cardEl.onclick = () => flipCardElement(card, cardEl);
 
                 const fallbackImg = `https://placehold.co/300x400/121620/38bdf8?text=${encodeURIComponent(card.name)}`;
 
@@ -2219,11 +3396,15 @@
                                     <img src="${card.img}" alt="${card.name}" loading="lazy" onerror="this.src='${fallbackImg}'">
                                     <div class="card-cost">${card.cost}</div>
                                     <div class="card-type-tag">${card.typeName}</div>
+                                    <button class="add-deck-btn" onclick="event.stopPropagation(); addCardToDeck('${card.id}')">+ 加入牌組</button>
                                 </div>
                                 <div class="card-body">
                                     <div>
-                                        <div class="card-name">${card.name}</div>
-                                        <div class="card-desc">${card.desc}</div>
+                                        <div class="card-meta-row">
+                                            <span class="card-name">${card.name}</span>
+                                            <span class="card-id-code">${card.id}</span>
+                                        </div>
+                                        <div class="card-desc">${highlightKeywords(card.desc)}</div>
                                         <div class="card-recycle">${card.recycle}</div>
                                     </div>
                                     <div class="flip-hint-btn">已解鎖（點擊翻轉為加密狀態）</div>
@@ -2242,7 +3423,10 @@
                                 </div>
                                 <div class="card-body">
                                     <div>
-                                        <div class="card-name">未知協議</div>
+                                        <div class="card-meta-row">
+                                            <span class="card-name">未知協議</span>
+                                            <span class="card-id-code">${card.id}</span>
+                                        </div>
                                         <div class="card-desc">缺乏足夠的記憶數據碎片，尚未解析此協議的具體效果與消耗。</div>
                                         <div class="card-recycle">取得渠道：探索關卡 / 精神交易所</div>
                                     </div>
@@ -2257,16 +3441,156 @@
         }
 
         // =========================================================================
-        // 4. 敵人卡片網格渲染 & 彈出視窗（支援「簡述 / 詳述」即時切換與自適應滾動）
+        // 4. 牌組構築與【牌組代碼】分享編碼引擎 (Base64 壓縮)
+        // =========================================================================
+        let customDeck = {};
+
+        function addCardToDeck(cardId) {
+            const total = Object.values(customDeck).reduce((a, b) => a + b, 0);
+            if (total >= 20) {
+                showToast("⚠️ 單套牌組上限為 20 張協議！", true);
+                return;
+            }
+            customDeck[cardId] = (customDeck[cardId] || 0) + 1;
+            const cardObj = cardsData.find(c => c.id === cardId);
+            showToast(`➕ 已將《${cardObj ? cardObj.name : cardId}》加入牌組`);
+            renderDeckBuilder();
+        }
+
+        function removeCardFromDeck(cardId) {
+            if (!customDeck[cardId]) return;
+            customDeck[cardId]--;
+            if (customDeck[cardId] <= 0) delete customDeck[cardId];
+            renderDeckBuilder();
+        }
+
+        function clearCustomDeck() {
+            customDeck = {};
+            renderDeckBuilder();
+            showToast("🗑️ 已清空自訂牌組。");
+        }
+
+        function loadPresetDeck(type) {
+            if (type === 'crab') {
+                customDeck = { "DEF-15": 3, "RES-27": 2, "RES-28": 2, "RES-40": 2, "RES-48": 2, "STA-17": 2 };
+                showToast("🦀 已載入預設構築：《蟹化無限循環流》");
+            } else if (type === 'selfharm') {
+                customDeck = { "ATT-06": 2, "ATT-11": 1, "DEF-08": 2, "RES-14": 2, "RES-15": 2, "STA-13": 2, "ABL-04": 1 };
+                showToast("🩸 已載入預設構築：《自殘祈禱爆發流》");
+            }
+            renderDeckBuilder();
+        }
+
+        function encodeDeckToString() {
+            const entries = Object.entries(customDeck);
+            if (entries.length === 0) return "";
+            const raw = entries.map(([id, count]) => count > 1 ? `${id}*${count}` : id).join(",");
+            return "RPN-" + btoa(raw);
+        }
+
+        function decodeStringToDeck(codeStr) {
+            const clean = codeStr.trim();
+            if (!clean.startsWith("RPN-")) return null;
+            try {
+                const raw = atob(clean.slice(4));
+                const nextDeck = {};
+                raw.split(",").forEach(token => {
+                    const [id, cntStr] = token.split("*");
+                    const exists = cardsData.some(c => c.id === id);
+                    if (exists) {
+                        nextDeck[id] = Math.min(5, Math.max(1, parseInt(cntStr || "1", 10)));
+                    }
+                });
+                return Object.keys(nextDeck).length > 0 ? nextDeck : null;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function renderDeckBuilder() {
+            const wrap = document.getElementById('deckChipsWrap');
+            const codeInput = document.getElementById('deckCodeInput');
+            const entries = Object.entries(customDeck);
+
+            if (entries.length === 0) {
+                wrap.innerHTML = `<span style="color:var(--text-muted); font-size:0.82rem;">目前牌組為空，請從下方圖鑑挑選卡牌，或在右側貼上牌組代碼匯入...</span>`;
+                document.getElementById('deckTotalCount').innerText = "0";
+                document.getElementById('deckAvgCost').innerText = "0.0";
+                codeInput.value = "";
+                return;
+            }
+
+            let totalCards = 0;
+            let totalCost = 0;
+            let countableCards = 0;
+
+            wrap.innerHTML = entries.map(([id, count]) => {
+                const c = cardsData.find(item => item.id === id);
+                if (!c) return '';
+                totalCards += count;
+                const numCost = parseInt(c.cost, 10);
+                if (!isNaN(numCost)) {
+                    totalCost += numCost * count;
+                    countableCards += count;
+                }
+                return `
+                        <div class="deck-chip" onclick="removeCardFromDeck('${id}')" title="點擊移除 1 張">
+                            <span class="deck-chip-cost">[${c.cost}]</span>
+                            <span>${c.name}</span>
+                            <span class="deck-chip-count">×${count}</span>
+                        </div>
+                    `;
+            }).join('');
+
+            document.getElementById('deckTotalCount').innerText = totalCards;
+            document.getElementById('deckAvgCost').innerText = countableCards > 0 ? (totalCost / countableCards).toFixed(1) : "0.0";
+            codeInput.value = encodeDeckToString();
+        }
+
+        function copyDeckCode() {
+            const code = document.getElementById('deckCodeInput').value;
+            if (!code) {
+                showToast("⚠️ 請先在牌組中加入卡牌再複製代碼！", true);
+                return;
+            }
+            navigator.clipboard.writeText(code).then(() => {
+                showToast("📋 牌組代碼已複製到剪貼簿！可直接貼給隊友匯入。");
+            });
+        }
+
+        function importDeckCode() {
+            const code = document.getElementById('deckCodeInput').value;
+            const parsed = decodeStringToDeck(code);
+            if (!parsed) {
+                showToast("❌ 無效的牌組代碼，請確認是否為 RPN- 開頭！", true);
+                return;
+            }
+            customDeck = parsed;
+            renderDeckBuilder();
+            showToast("✅ 牌組代碼匯入成功！已還原對應卡牌配置。");
+        }
+
+        // =========================================================================
+        // 5. 敵人卡片網格渲染、等級過濾 & 彈出視窗（支援左右切換與鍵盤快捷鍵）
         // =========================================================================
         let currentModalEnemyIndex = 0;
         let currentSkillViewMode = 'brief';
+        let currentEnemyFilter = 'all';
+
+        function filterEnemies(tier, btnElement) {
+            currentEnemyFilter = tier;
+            document.querySelectorAll('#enemyTabs .tab-btn').forEach(b => b.classList.remove('active'));
+            btnElement.classList.add('active');
+            renderEnemies();
+        }
 
         function renderEnemies() {
             const grid = document.getElementById('enemyGrid');
             grid.innerHTML = '';
 
             enemiesData.forEach((enemy, index) => {
+                if (currentEnemyFilter !== 'all' && enemy.tier !== currentEnemyFilter) return;
+
                 const fallbackImg = `https://placehold.co/280x280/090b10/f43f5e?text=${encodeURIComponent(enemy.name)}`;
 
                 const card = document.createElement('div');
@@ -2301,6 +3625,11 @@
             document.getElementById('enemyModal').classList.add('open');
         }
 
+        function stepEnemyModal(dir) {
+            currentModalEnemyIndex = (currentModalEnemyIndex + dir + enemiesData.length) % enemiesData.length;
+            renderModalContent();
+        }
+
         function switchSkillMode(mode) {
             currentSkillViewMode = mode;
             renderModalSkillsArea();
@@ -2310,7 +3639,7 @@
             const enemy = enemiesData[currentModalEnemyIndex];
             const fallbackImg = `https://placehold.co/360x360/090b10/f43f5e?text=${encodeURIComponent(enemy.name)}`;
 
-            document.getElementById('modalCodeHeader').innerText = `${enemy.code} // ${enemy.rank}`;
+            document.getElementById('modalCodeHeader').innerText = `${enemy.code} // ${enemy.rank} (${currentModalEnemyIndex + 1} / ${enemiesData.length})`;
 
             document.getElementById('modalContentBody').innerHTML = `
                     <div class="modal-art-pane">
@@ -2345,7 +3674,7 @@
                                 <span class="skill-tag ${s.tagClass}">${s.tag}</span>
                                 <span class="modal-skill-name">${s.name}</span>
                             </div>
-                            <div class="modal-skill-desc">${s.desc}</div>
+                            <div class="modal-skill-desc">${highlightKeywords(s.desc)}</div>
                         </div>
                     `).join('') + `</div>`;
             } else {
@@ -2358,8 +3687,8 @@
                                         <span class="skill-tag ${s.tagClass}">${s.tag}</span>
                                         <span class="modal-skill-name">${s.name}</span>
                                     </div>
-                                    <div class="modal-skill-desc">${s.desc}</div>
-                                    ${s.note ? `<div class="sub-effect-note">${s.note}</div>` : ''}
+                                    <div class="modal-skill-desc">${highlightKeywords(s.desc)}</div>
+                                    ${s.note ? `<div class="sub-effect-note">${highlightKeywords(s.note)}</div>` : ''}
                                 </div>
                             `).join('')}
                         </div>
@@ -2388,9 +3717,54 @@
             document.getElementById('enemyModal').classList.remove('open');
         }
 
+        // =========================================================================
+        // 6. 全局快捷鍵、游標微光與滾動進度條連動
+        // =========================================================================
+        document.addEventListener('mousemove', (e) => {
+            document.body.style.setProperty('--mx', `${e.clientX}px`);
+            document.body.style.setProperty('--my', `${e.clientY}px`);
+        }, { passive: true });
+
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') forceCloseModal();
+            const isModalOpen = document.getElementById('enemyModal').classList.contains('open');
+            if (isModalOpen) {
+                if (e.key === 'Escape') forceCloseModal();
+                if (e.key === 'ArrowLeft') stepEnemyModal(-1);
+                if (e.key === 'ArrowRight') stepEnemyModal(1);
+                return;
+            }
+            if (e.key === '/' && document.activeElement.tagName !== 'INPUT') {
+                e.preventDefault();
+                const searchBox = document.getElementById('cardSearchInput');
+                if (searchBox) {
+                    searchBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    searchBox.focus();
+                }
+            }
         });
+
+        window.addEventListener('scroll', () => {
+            const scrollTop = window.scrollY;
+            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+            const pct = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+            document.getElementById('scrollProgressBar').style.width = `${pct}%`;
+
+            const topBtn = document.getElementById('backToTopBtn');
+            if (scrollTop > 400) topBtn.classList.add('visible');
+            else topBtn.classList.remove('visible');
+
+            const sections = ['features', 'card-dex', 'enemy-dex', 'team'];
+            let activeSec = '';
+            sections.forEach(id => {
+                const el = document.getElementById(id);
+                if (el && scrollTop >= el.offsetTop - 220) {
+                    activeSec = id;
+                }
+            });
+            document.querySelectorAll('#mainNav a').forEach(a => {
+                a.classList.toggle('active-nav', a.getAttribute('data-sec') === activeSec);
+            });
+        }, { passive: true });
 
         // 初始化執行
         switchArch(0, document.querySelector('.arch-tab'));
@@ -2398,7 +3772,7 @@
         renderEnemies();
 
         // =========================================================================
-        // 5. 高效能版：常駐背景心電圖 / 認知波形光幕渲染引擎
+        // 7. 高效能版：常駐背景心電圖 / 認知波形光幕渲染引擎
         // =========================================================================
         (function initBgWave() {
             const canvas = document.getElementById('bgWaveCanvas');
@@ -2447,7 +3821,6 @@
                 scrollBoost *= 0.92;
                 const midY = height * 0.52;
 
-                // 1. 基準線
                 ctx.strokeStyle = 'rgba(56, 189, 248, 0.06)';
                 ctx.lineWidth = 1;
                 ctx.beginPath();
@@ -2455,7 +3828,6 @@
                 ctx.lineTo(width, midY);
                 ctx.stroke();
 
-                // 2. 紅色副波 (步長 8px，大幅減少運算量)
                 ctx.beginPath();
                 ctx.strokeStyle = 'rgba(244, 63, 94, 0.22)';
                 ctx.lineWidth = 1.5;
@@ -2466,7 +3838,6 @@
                 }
                 ctx.stroke();
 
-                // 3. 青藍色主波路徑計算 (步長 5px)
                 ctx.beginPath();
                 for (let x = 0; x <= width; x += 5) {
                     const y = midY + ecgPulse(x + phase * 55) * ampScale;
@@ -2474,12 +3845,10 @@
                     else ctx.lineTo(x, y);
                 }
 
-                // 寬半透明外框模擬發光，取代極耗 GPU 的 shadowBlur
                 ctx.strokeStyle = 'rgba(56, 189, 248, 0.16)';
                 ctx.lineWidth = 7;
                 ctx.stroke();
 
-                // 核心亮線
                 ctx.strokeStyle = 'rgba(56, 189, 248, 0.65)';
                 ctx.lineWidth = 2;
                 ctx.stroke();
