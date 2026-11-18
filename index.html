@@ -3730,6 +3730,7 @@
                 showToast("[LIMIT] 單套牌組上限為 20 張協議！", true);
                 return;
             }
+            if ((customDeck[cardId] || 0) >= 5) { showToast("[LIMIT] 單張同名協議最多放入 5 張！", true); return; }
             customDeck[cardId] = (customDeck[cardId] || 0) + 1;
             const cardObj = cardsData.find(c => c.id === cardId);
             const nextTotal = total + 1;
@@ -3776,13 +3777,22 @@
             try {
                 const raw = atob(clean.slice(4));
                 const nextDeck = {};
+                let hasTruncated = false;
+
                 raw.split(",").forEach(token => {
                     const [id, cntStr] = token.split("*");
                     const exists = cardsData.some(c => c.id === id);
                     if (exists) {
-                        nextDeck[id] = Math.min(5, Math.max(1, parseInt(cntStr || "1", 10)));
+                        const rawCount = Math.max(1, parseInt(cntStr || "1", 10));
+                        if (rawCount > 5) hasTruncated = true;
+                        nextDeck[id] = Math.min(5, rawCount);
                     }
                 });
+
+                if (hasTruncated) {
+                    showToast("[NOTICE] 單張同名協議上限為 5 張，超出部分已自動調整並重編代碼。", true);
+                }
+
                 return Object.keys(nextDeck).length > 0 ? nextDeck : null;
             } catch (e) {
                 return null;
