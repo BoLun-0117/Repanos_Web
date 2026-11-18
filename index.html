@@ -137,7 +137,7 @@
             }
 
         /* =========================================================
-           頂部導航列
+           頂部導航列 & BGM 音訊控制器
            ========================================================= */
         header {
             position: sticky;
@@ -221,7 +221,7 @@
         nav {
             display: flex;
             align-items: center;
-            gap: 26px;
+            gap: 24px;
         }
 
             nav a {
@@ -248,6 +248,89 @@
                         height: 2px;
                         background: var(--accent-cyan);
                     }
+
+        .bgm-widget {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(18, 22, 32, 0.92);
+            border: 1px solid var(--border-color);
+            padding: 5px 12px;
+            border-radius: 4px;
+            margin-left: 6px;
+            transition: border-color 0.25s ease, box-shadow 0.25s ease;
+        }
+
+            .bgm-widget.playing {
+                border-color: var(--accent-cyan);
+                box-shadow: 0 0 12px rgba(56, 189, 248, 0.18);
+            }
+
+        .bgm-toggle-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            transition: color 0.2s;
+        }
+
+        .bgm-widget.playing .bgm-toggle-btn {
+            color: var(--accent-cyan);
+        }
+
+        .eq-bars {
+            display: inline-flex;
+            align-items: flex-end;
+            gap: 2px;
+            height: 12px;
+            width: 14px;
+        }
+
+            .eq-bars span {
+                display: block;
+                width: 3px;
+                height: 3px;
+                background: var(--text-muted);
+                border-radius: 1px;
+                transition: height 0.2s ease, background 0.2s ease;
+            }
+
+        .bgm-widget.playing .eq-bars span {
+            background: var(--accent-cyan);
+            animation: eqPulse 0.8s infinite ease-in-out alternate;
+        }
+
+            .bgm-widget.playing .eq-bars span:nth-child(2) {
+                animation-delay: 0.2s;
+            }
+
+            .bgm-widget.playing .eq-bars span:nth-child(3) {
+                animation-delay: 0.4s;
+            }
+
+        @keyframes eqPulse {
+            0% {
+                height: 3px;
+            }
+
+            100% {
+                height: 12px;
+            }
+        }
+
+        .bgm-vol-slider {
+            width: 55px;
+            height: 3px;
+            accent-color: var(--accent-cyan);
+            cursor: pointer;
+            background: #1e293b;
+        }
 
         /* =========================================================
            Hero 主視覺 + 動態數據速覽列
@@ -2200,6 +2283,10 @@
         }
 
         @media (max-width: 850px) {
+            .bgm-vol-slider {
+                display: none;
+            }
+
             .hero-metrics {
                 grid-template-columns: repeat(2, 1fr);
             }
@@ -2272,6 +2359,9 @@
     <!-- 頂部閱讀同步進度條 -->
     <div id="scrollProgressBar"></div>
 
+    <!-- 背景音樂播放器（路徑對應 images/shizumiyukutaiyou.mp3） -->
+    <audio id="bgMusicPlayer" src="images/shizumiyukutaiyou.mp3" loop preload="auto"></audio>
+
     <!-- 常駐背景神經同步心電圖光幕 -->
     <canvas id="bgWaveCanvas"></canvas>
 
@@ -2297,6 +2387,15 @@
             <a href="#card-dex" data-sec="card-dex">協議卡牌圖鑑</a>
             <a href="#enemy-dex" data-sec="enemy-dex">異常實體圖鑑</a>
             <a href="#team" data-sec="team">製作團隊</a>
+
+            <!-- BGM 音訊控制器 -->
+            <div class="bgm-widget" id="bgmWidget">
+                <button class="bgm-toggle-btn" id="bgmToggleBtn" onclick="toggleBgm()" title="切換背景音樂">
+                    <span class="eq-bars"><span></span><span></span><span></span></span>
+                    <span id="bgmStatusText">BGM // OFF</span>
+                </button>
+                <input type="range" class="bgm-vol-slider" id="bgmVolume" min="0" max="1" step="0.05" value="0.35" oninput="changeBgmVolume(this.value)" title="調整音量">
+            </div>
         </nav>
     </header>
 
@@ -3173,7 +3272,6 @@
             const totalEnemies = enemiesData.length;
             const distinctCardTypes = new Set(cardsData.map(c => c.type)).size;
 
-            // 更新 Hero 數據速覽
             const elTotalCards = document.getElementById('metricTotalCards');
             const elCardTypes = document.getElementById('metricCardTypes');
             const elTotalEnemies = document.getElementById('metricTotalEnemies');
@@ -3181,7 +3279,6 @@
             if (elCardTypes) elCardTypes.innerText = distinctCardTypes;
             if (elTotalEnemies) elTotalEnemies.innerText = totalEnemies;
 
-            // 自動更新卡牌分類按鈕數量
             const cardTypeLabels = {
                 all: "全部協議",
                 attack: "攻擊端",
@@ -3198,7 +3295,6 @@
                 }
             });
 
-            // 自動更新敵人分類按鈕數量
             const enemyTierLabels = {
                 all: "全部實體",
                 normal: "教學與普通實體",
@@ -3234,7 +3330,6 @@
             const tag = document.createElement('div');
             tag.className = `floating-dmg-text ${styleClass}`;
             tag.innerText = text;
-            // 稍微錯開水平位置，連擊時不會重疊在一起
             const offsetX = Math.floor(Math.random() * 44) - 22;
             tag.style.left = `calc(50% + ${offsetX}px)`;
             box.appendChild(tag);
@@ -3302,87 +3397,87 @@
                 desc: "點擊下方扇形手牌出牌，或直接連點左側木人樁《金甲勇》測試連擊：每次行動同時推高認知負荷，突破 100% 將爆發干擾彈窗遮擋視線。",
                 renderHud: () => {
                     const popupsHtml = activePopups.map(p => `
-                        <div class="overload-popup" style="top:${p.top}px; left:${p.left}px;">
-                            <div class="popup-bar">
-                                <span>[ALERT] ${p.code}</span>
-                                <button class="popup-close" onclick="closeOverloadPopup(${p.id})">X</button>
+                            <div class="overload-popup" style="top:${p.top}px; left:${p.left}px;">
+                                <div class="popup-bar">
+                                    <span>[ALERT] ${p.code}</span>
+                                    <button class="popup-close" onclick="closeOverloadPopup(${p.id})">X</button>
+                                </div>
+                                <div class="popup-body">${p.msg}</div>
                             </div>
-                            <div class="popup-body">${p.msg}</div>
-                        </div>
-                    `).join('');
+                        `).join('');
 
                     return `
-                    <div style="position:relative;">
-                        ${popupsHtml}
-                        <div class="combat-arena-grid">
-                            <!-- 左側：大型木人樁獨立對峙區 -->
-                            <div class="dummy-stage-card" onclick="directPunchDummy()" title="點擊木人樁直接測試普攻連擊！">
-                                <div style="width:100%; display:flex; justify-content:space-between; font-size:0.72rem; color:var(--text-muted);">
-                                    <span>TARGET // DUMMY</span>
-                                    <span style="color:var(--accent-red);">[點擊連擊]</span>
-                                </div>
-                                <div class="dummy-avatar-box" id="dummyAvatarBox">
-                                    <img id="dummyTargetImg" src="images/enemies/金甲勇（無聊版）.PNG" alt="金甲勇（無聊版）" onerror="this.src='images/enemies/最甲員工(無聊版).PNG'">
-                                </div>
-                                <div class="dummy-status-footer">
-                                    <div style="font-size:0.9rem; font-weight:700; color:#fff;">金甲勇（訓練木樁）</div>
-                                    <div class="dummy-hp-track"><div class="dummy-hp-fill" id="dummyHpFill" style="width:${(simDummyHp / simDummyMaxHp) * 100}%"></div></div>
-                                    <div id="dummyHpText" style="font-size:0.76rem; color:var(--accent-red); font-weight:700;">HP ${simDummyHp} / ${simDummyMaxHp}</div>
-                                </div>
-                            </div>
-
-                            <!-- 右側：雙資源儀表與扇形手牌區 -->
-                            <div class="combat-control-pane">
-                                <div class="dual-meters-bar">
-                                    <div class="meter-block">
-                                        <div class="hud-label"><span style="color:#38bdf8">SYNC 同步能量</span><span>${simSync} / 4</span></div>
-                                        <div class="bar-bg"><div class="bar-fill-sync" style="width:${(simSync / 4) * 100}%"></div></div>
+                        <div style="position:relative;">
+                            ${popupsHtml}
+                            <div class="combat-arena-grid">
+                                <!-- 左側：大型木人樁獨立對峙區 -->
+                                <div class="dummy-stage-card" onclick="directPunchDummy()" title="點擊木人樁直接測試普攻連擊！">
+                                    <div style="width:100%; display:flex; justify-content:space-between; font-size:0.72rem; color:var(--text-muted);">
+                                        <span>TARGET // DUMMY</span>
+                                        <span style="color:var(--accent-red);">[點擊連擊]</span>
                                     </div>
-                                    <div class="meter-block">
-                                        <div class="hud-label"><span style="color:#f43f5e">LOAD 認知負荷</span><span id="simLoadText">${simLoad}%</span></div>
-                                        <div class="bar-bg"><div class="bar-fill-load" id="simLoadBar" style="width:${Math.min(simLoad, 100)}%"></div></div>
+                                    <div class="dummy-avatar-box" id="dummyAvatarBox">
+                                        <img id="dummyTargetImg" src="images/enemies/金甲勇（無聊版）.PNG" alt="金甲勇（無聊版）" onerror="this.src='images/enemies/最甲員工(無聊版).PNG'">
                                     </div>
-                                    <button class="action-mini-btn" onclick="resetSimBattle()" style="font-size:0.75rem;">[RESET] 重置</button>
+                                    <div class="dummy-status-footer">
+                                        <div style="font-size:0.9rem; font-weight:700; color:#fff;">金甲勇（訓練木樁）</div>
+                                        <div class="dummy-hp-track"><div class="dummy-hp-fill" id="dummyHpFill" style="width:${(simDummyHp / simDummyMaxHp) * 100}%"></div></div>
+                                        <div id="dummyHpText" style="font-size:0.76rem; color:var(--accent-red); font-weight:700;">HP ${simDummyHp} / ${simDummyMaxHp}</div>
+                                    </div>
                                 </div>
 
-                                <div class="fanned-hand-stage">
-                                    <div class="fan-card" onclick="playSimCard('斯巴達式踢擊', 1, 22, 15)">
-                                        <div class="fan-card-art">
-                                            <img src="images/cards/斯巴達式踢擊.PNG" alt="斯巴達式踢擊">
-                                            <span class="fan-card-cost">1 SYNC</span>
-                                            <span class="fan-card-load">+22%</span>
+                                <!-- 右側：雙資源儀表與扇形手牌區 -->
+                                <div class="combat-control-pane">
+                                    <div class="dual-meters-bar">
+                                        <div class="meter-block">
+                                            <div class="hud-label"><span style="color:#38bdf8">SYNC 同步能量</span><span>${simSync} / 4</span></div>
+                                            <div class="bar-bg"><div class="bar-fill-sync" style="width:${(simSync / 4) * 100}%"></div></div>
                                         </div>
-                                        <div class="fan-card-body">
-                                            <div class="fan-card-name">斯巴達式踢擊</div>
-                                            <div class="fan-card-effect">造成 15 點傷害</div>
+                                        <div class="meter-block">
+                                            <div class="hud-label"><span style="color:#f43f5e">LOAD 認知負荷</span><span id="simLoadText">${simLoad}%</span></div>
+                                            <div class="bar-bg"><div class="bar-fill-load" id="simLoadBar" style="width:${Math.min(simLoad, 100)}%"></div></div>
                                         </div>
+                                        <button class="action-mini-btn" onclick="resetSimBattle()" style="font-size:0.75rem;">[RESET] 重置</button>
                                     </div>
-                                    <div class="fan-card" onclick="playSimCard('伊卡洛斯的傲慢', 2, 38, 23)">
-                                        <div class="fan-card-art">
-                                            <img src="images/cards/伊卡洛斯的傲慢.PNG" alt="伊卡洛斯的傲慢">
-                                            <span class="fan-card-cost">2 SYNC</span>
-                                            <span class="fan-card-load">+38%</span>
+
+                                    <div class="fanned-hand-stage">
+                                        <div class="fan-card" onclick="playSimCard('斯巴達式踢擊', 1, 22, 15)">
+                                            <div class="fan-card-art">
+                                                <img src="images/cards/斯巴達式踢擊.PNG" alt="斯巴達式踢擊">
+                                                <span class="fan-card-cost">1 SYNC</span>
+                                                <span class="fan-card-load">+22%</span>
+                                            </div>
+                                            <div class="fan-card-body">
+                                                <div class="fan-card-name">斯巴達式踢擊</div>
+                                                <div class="fan-card-effect">造成 15 點傷害</div>
+                                            </div>
                                         </div>
-                                        <div class="fan-card-body">
-                                            <div class="fan-card-name">伊卡洛斯的傲慢</div>
-                                            <div class="fan-card-effect">造成 23 點爆發重擊</div>
+                                        <div class="fan-card" onclick="playSimCard('伊卡洛斯的傲慢', 2, 38, 23)">
+                                            <div class="fan-card-art">
+                                                <img src="images/cards/伊卡洛斯的傲慢.PNG" alt="伊卡洛斯的傲慢">
+                                                <span class="fan-card-cost">2 SYNC</span>
+                                                <span class="fan-card-load">+38%</span>
+                                            </div>
+                                            <div class="fan-card-body">
+                                                <div class="fan-card-name">伊卡洛斯的傲慢</div>
+                                                <div class="fan-card-effect">造成 23 點爆發重擊</div>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="fan-card" onclick="playSimCard('思緒整理', 0, -30, 0)">
-                                        <div class="fan-card-art">
-                                            <img src="images/cards/思緒整理.PNG" alt="思緒整理">
-                                            <span class="fan-card-cost" style="color:#10b981; border-color:#10b981;">0 SYNC</span>
-                                            <span class="fan-card-load" style="color:#38bdf8; border-color:#38bdf8;">-30%</span>
-                                        </div>
-                                        <div class="fan-card-body">
-                                            <div class="fan-card-name">思緒整理</div>
-                                            <div class="fan-card-effect" style="color:#38bdf8;">冷卻認知負荷</div>
+                                        <div class="fan-card" onclick="playSimCard('思緒整理', 0, -30, 0)">
+                                            <div class="fan-card-art">
+                                                <img src="images/cards/思緒整理.PNG" alt="思緒整理">
+                                                <span class="fan-card-cost" style="color:#10b981; border-color:#10b981;">0 SYNC</span>
+                                                <span class="fan-card-load" style="color:#38bdf8; border-color:#38bdf8;">-30%</span>
+                                            </div>
+                                            <div class="fan-card-body">
+                                                <div class="fan-card-name">思緒整理</div>
+                                                <div class="fan-card-effect" style="color:#38bdf8;">冷卻認知負荷</div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>`;
+                        </div>`;
                 }
             },
             {
@@ -3390,70 +3485,70 @@
                 title: "動態回收條件與永久消耗",
                 desc: "直接點擊中間的特質協議卡牌進行測試：未達成回收條件將永久消耗並留下紅色幽靈槽；再次點擊即可於精神交易所消耗碎片打撈。",
                 renderHud: () => `
-                        <div>
-                            <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:var(--text-muted); margin-bottom:8px;">
-                                <span>點擊特質協議卡片切換狀態</span>
-                                <span>記憶碎片：<strong style="color:var(--accent-gold)">${memoryShards} SHARDS</strong></span>
-                            </div>
-                            <div class="deck-cycle-stage">
-                                <div class="cycle-card" onclick="showToast('[NORMAL] 《打擊》為普通特性，使用後直接進入棄牌堆循環。')">
-                                    <div class="cycle-art"><img src="images/cards/打擊.PNG" alt="打擊"></div>
-                                    <div class="cycle-info">
-                                        <span style="font-weight:700; font-size:0.88rem; color:#fff;">打擊</span>
-                                        <span style="font-size:0.74rem; color:var(--accent-cyan);">普通循環</span>
-                                    </div>
+                            <div>
+                                <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:var(--text-muted); margin-bottom:8px;">
+                                    <span>點擊特質協議卡片切換狀態</span>
+                                    <span>記憶碎片：<strong style="color:var(--accent-gold)">${memoryShards} SHARDS</strong></span>
                                 </div>
+                                <div class="deck-cycle-stage">
+                                    <div class="cycle-card" onclick="showToast('[NORMAL] 《打擊》為普通特性，使用後直接進入棄牌堆循環。')">
+                                        <div class="cycle-art"><img src="images/cards/打擊.PNG" alt="打擊"></div>
+                                        <div class="cycle-info">
+                                            <span style="font-weight:700; font-size:0.88rem; color:#fff;">打擊</span>
+                                            <span style="font-size:0.74rem; color:var(--accent-cyan);">普通循環</span>
+                                        </div>
+                                    </div>
 
-                                <div class="cycle-card ${slot2Consumed ? 'is-ghost' : ''}" onclick="${slot2Consumed ? 'salvageGhostCard()' : 'simCardRecycle(false)'}">
-                                    <div class="cycle-art">
-                                        <img src="images/cards/伊卡洛斯的傲慢.PNG" alt="伊卡洛斯的傲慢">
-                                        ${slot2Consumed ? '<div class="cycle-overlay-tag"><span>GHOST SLOT</span><span style="font-size:0.72rem; color:#eab308; margin-top:4px;">點擊花費 40 碎片打撈</span></div>' : '<div class="cycle-overlay-tag" style="background:rgba(9,11,16,0.2); color:#fff; font-size:0.75rem;">點擊模擬未達成條件</div>'}
+                                    <div class="cycle-card ${slot2Consumed ? 'is-ghost' : ''}" onclick="${slot2Consumed ? 'salvageGhostCard()' : 'simCardRecycle(false)'}">
+                                        <div class="cycle-art">
+                                            <img src="images/cards/伊卡洛斯的傲慢.PNG" alt="伊卡洛斯的傲慢">
+                                            ${slot2Consumed ? '<div class="cycle-overlay-tag"><span>GHOST SLOT</span><span style="font-size:0.72rem; color:#eab308; margin-top:4px;">點擊花費 40 碎片打撈</span></div>' : '<div class="cycle-overlay-tag" style="background:rgba(9,11,16,0.2); color:#fff; font-size:0.75rem;">點擊模擬未達成條件</div>'}
+                                        </div>
+                                        <div class="cycle-info">
+                                            <span style="font-weight:700; font-size:0.88rem; color:${slot2Consumed ? 'var(--accent-red)' : '#fff'};">伊卡洛斯的傲慢</span>
+                                            <span style="font-size:0.74rem; color:${slot2Consumed ? 'var(--accent-red)' : 'var(--accent-gold)'};">${slot2Consumed ? '已永久消耗' : '特質協議'}</span>
+                                        </div>
                                     </div>
-                                    <div class="cycle-info">
-                                        <span style="font-weight:700; font-size:0.88rem; color:${slot2Consumed ? 'var(--accent-red)' : '#fff'};">伊卡洛斯的傲慢</span>
-                                        <span style="font-size:0.74rem; color:${slot2Consumed ? 'var(--accent-red)' : 'var(--accent-gold)'};">${slot2Consumed ? '已永久消耗' : '特質協議'}</span>
-                                    </div>
-                                </div>
 
-                                <div class="cycle-card" onclick="simCardRecycle(true)">
-                                    <div class="cycle-art"><img src="images/cards/靈光一閃.PNG" alt="靈光一閃"></div>
-                                    <div class="cycle-info">
-                                        <span style="font-weight:700; font-size:0.88rem; color:#fff;">靈光一閃</span>
-                                        <span style="font-size:0.74rem; color:var(--accent-cyan);">回歸特性</span>
+                                    <div class="cycle-card" onclick="simCardRecycle(true)">
+                                        <div class="cycle-art"><img src="images/cards/靈光一閃.PNG" alt="靈光一閃"></div>
+                                        <div class="cycle-info">
+                                            <span style="font-weight:700; font-size:0.88rem; color:#fff;">靈光一閃</span>
+                                            <span style="font-size:0.74rem; color:var(--accent-cyan);">回歸特性</span>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        </div>`
+                            </div>`
             },
             {
                 badge: "SYSTEM 03 // PHILOSOPHICAL ENCOUNTER",
                 title: "哲學事件與人格抉擇",
                 desc: "與古希臘意識深層的哲學意象交鋒，點擊突觸分支選項，將人格抉擇直接轉化為專屬協議卡牌：",
                 renderHud: () => `
-                        <div class="philosophy-stage">
-                            <div class="npc-portrait-frame">
-                                <img src="images/enemies/第歐根尼·邊線.PNG" alt="第歐根尼" onerror="this.style.display='none'">
-                                <div style="font-size:0.82rem; font-weight:700; color:var(--accent-gold); margin-top:4px;">第歐根尼</div>
-                            </div>
-                            <div>
-                                <div class="quote-bubble">「卸下所有規則與護甲後，你還剩下什麼？」</div>
-                                <div class="synapse-choices">
-                                    <button class="synapse-btn" onclick="choosePhilosophy(0)">
-                                        <span>01 // 理性拆解邏輯悖論</span>
-                                        <span class="reward-chip" style="color:var(--accent-cyan);"><img src="images/cards/理性思考.PNG"> 獲得《理性思考》</span>
-                                    </button>
-                                    <button class="synapse-btn" onclick="choosePhilosophy(1)">
-                                        <span>02 // 擁抱痛苦與狂熱代價</span>
-                                        <span class="reward-chip" style="color:var(--accent-red);"><img src="images/cards/狂戰血祭.PNG"> 獲得《狂戰血祭》</span>
-                                    </button>
-                                    <button class="synapse-btn" onclick="choosePhilosophy(2)">
-                                        <span>03 // 犬儒式沉默轉身離去</span>
-                                        <span class="reward-chip" style="color:var(--accent-gold);"><img src="images/cards/武器化無能.PNG"> 獲得《武器化無能》</span>
-                                    </button>
+                            <div class="philosophy-stage">
+                                <div class="npc-portrait-frame">
+                                    <img src="images/enemies/第歐根尼·邊線.PNG" alt="第歐根尼" onerror="this.style.display='none'">
+                                    <div style="font-size:0.82rem; font-weight:700; color:var(--accent-gold); margin-top:4px;">第歐根尼</div>
                                 </div>
-                                ${selectedPhilosophyChoice ? `<div style="margin-top:10px; font-size:0.8rem; color:var(--accent-cyan);">[RESULT] ${selectedPhilosophyChoice}</div>` : ''}
-                            </div>
-                        </div>`
+                                <div>
+                                    <div class="quote-bubble">「卸下所有規則與護甲後，你還剩下什麼？」</div>
+                                    <div class="synapse-choices">
+                                        <button class="synapse-btn" onclick="choosePhilosophy(0)">
+                                            <span>01 // 理性拆解邏輯悖論</span>
+                                            <span class="reward-chip" style="color:var(--accent-cyan);"><img src="images/cards/理性思考.PNG"> 獲得《理性思考》</span>
+                                        </button>
+                                        <button class="synapse-btn" onclick="choosePhilosophy(1)">
+                                            <span>02 // 擁抱痛苦與狂熱代價</span>
+                                            <span class="reward-chip" style="color:var(--accent-red);"><img src="images/cards/狂戰血祭.PNG"> 獲得《狂戰血祭》</span>
+                                        </button>
+                                        <button class="synapse-btn" onclick="choosePhilosophy(2)">
+                                            <span>03 // 犬儒式沉默轉身離去</span>
+                                            <span class="reward-chip" style="color:var(--accent-gold);"><img src="images/cards/武器化無能.PNG"> 獲得《武器化無能》</span>
+                                        </button>
+                                    </div>
+                                    ${selectedPhilosophyChoice ? `<div style="margin-top:10px; font-size:0.8rem; color:var(--accent-cyan);">[RESULT] ${selectedPhilosophyChoice}</div>` : ''}
+                                </div>
+                            </div>`
             }
         ];
 
@@ -3462,15 +3557,15 @@
             if (btn) btn.classList.add('active');
             const item = archData[index];
             document.getElementById('archDisplay').innerHTML = `
-                    <div class="arch-header-flex">
-                        <div>
-                            <div class="arch-badge">${item.badge}</div>
-                            <h3>${item.title}</h3>
-                            <p class="arch-desc-compact">${item.desc}</p>
+                        <div class="arch-header-flex">
+                            <div>
+                                <div class="arch-badge">${item.badge}</div>
+                                <h3>${item.title}</h3>
+                                <p class="arch-desc-compact">${item.desc}</p>
+                            </div>
                         </div>
-                    </div>
-                    ${item.renderHud()}
-                `;
+                        ${item.renderHud()}
+                    `;
         }
 
         function playSimCard(name, cost, loadDelta, dmg) {
@@ -3566,7 +3661,6 @@
         }
 
         function updateProgressText() {
-            // 過濾掉已不存在於 cardsData 的舊 ID，確保分母與分子永遠精準同步
             const validUnlockedCount = unlockedList.filter(id => cardsData.some(c => c.id === id)).length;
             document.getElementById('unlockProgress').innerText = `${validUnlockedCount} / ${cardsData.length}`;
         }
@@ -3669,51 +3763,51 @@
                 const backImgClass = hasCustomSilhouette ? "" : "auto-silhouette";
 
                 cardEl.innerHTML = `
-                        <div class="flip-card-inner">
-                            <div class="flip-card-front">
-                                <div class="card-img-wrap">
-                                    <img src="${card.img}" alt="${card.name}" loading="lazy" onerror="this.src='${fallbackImg}'">
-                                    <div class="card-cost">${card.cost}</div>
-                                    <div class="card-type-tag">${card.typeName}</div>
-                                    <button class="add-deck-btn" onclick="event.stopPropagation(); addCardToDeck('${card.id}')">+ 加入牌組</button>
-                                </div>
-                                <div class="card-body">
-                                    <div>
-                                        <div class="card-meta-row">
-                                            <span class="card-name">${card.name}</span>
-                                            <span class="card-id-code">${card.id}</span>
-                                        </div>
-                                        <div class="card-desc">${highlightKeywords(card.desc)}</div>
-                                        <div class="card-recycle">${card.recycle}</div>
+                            <div class="flip-card-inner">
+                                <div class="flip-card-front">
+                                    <div class="card-img-wrap">
+                                        <img src="${card.img}" alt="${card.name}" loading="lazy" onerror="this.src='${fallbackImg}'">
+                                        <div class="card-cost">${card.cost}</div>
+                                        <div class="card-type-tag">${card.typeName}</div>
+                                        <button class="add-deck-btn" onclick="event.stopPropagation(); addCardToDeck('${card.id}')">+ 加入牌組</button>
                                     </div>
-                                    <div class="flip-hint-btn">已解鎖（點擊翻轉為加密狀態）</div>
+                                    <div class="card-body">
+                                        <div>
+                                            <div class="card-meta-row">
+                                                <span class="card-name">${card.name}</span>
+                                                <span class="card-id-code">${card.id}</span>
+                                            </div>
+                                            <div class="card-desc">${highlightKeywords(card.desc)}</div>
+                                            <div class="card-recycle">${card.recycle}</div>
+                                        </div>
+                                        <div class="flip-hint-btn">已解鎖（點擊翻轉為加密狀態）</div>
+                                    </div>
                                 </div>
-                            </div>
 
-                            <div class="flip-card-back">
-                                <div class="card-img-wrap">
-                                    <img src="${backImgSrc}" class="${backImgClass}" alt="Locked" loading="lazy"
-                                         onerror="this.src='${card.img}'; this.classList.add('auto-silhouette'); this.onerror=function(){this.src='${fallbackImg}'};">
-                                    <div class="lock-overlay">
-                                        <span>檔案未同步</span>
-                                    </div>
-                                    <div class="card-cost">?</div>
-                                    <div class="card-type-tag">${card.typeName}</div>
-                                </div>
-                                <div class="card-body">
-                                    <div>
-                                        <div class="card-meta-row">
-                                            <span class="card-name">未知協議</span>
-                                            <span class="card-id-code">${card.id}</span>
+                                <div class="flip-card-back">
+                                    <div class="card-img-wrap">
+                                        <img src="${backImgSrc}" class="${backImgClass}" alt="Locked" loading="lazy"
+                                             onerror="this.src='${card.img}'; this.classList.add('auto-silhouette'); this.onerror=function(){this.src='${fallbackImg}'};">
+                                        <div class="lock-overlay">
+                                            <span>檔案未同步</span>
                                         </div>
-                                        <div class="card-desc">缺乏足夠的記憶數據碎片，尚未解析此協議的具體效果與消耗。</div>
-                                        <div class="card-recycle">取得渠道：探索關卡 / 精神交易所</div>
+                                        <div class="card-cost">?</div>
+                                        <div class="card-type-tag">${card.typeName}</div>
                                     </div>
-                                    <div class="flip-hint-btn">點擊翻轉解鎖此協議</div>
+                                    <div class="card-body">
+                                        <div>
+                                            <div class="card-meta-row">
+                                                <span class="card-name">未知協議</span>
+                                                <span class="card-id-code">${card.id}</span>
+                                            </div>
+                                            <div class="card-desc">缺乏足夠的記憶數據碎片，尚未解析此協議的具體效果與消耗。</div>
+                                            <div class="card-recycle">取得渠道：探索關卡 / 精神交易所</div>
+                                        </div>
+                                        <div class="flip-hint-btn">點擊翻轉解鎖此協議</div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    `;
+                        `;
                 grid.appendChild(cardEl);
             });
             updateProgressText();
@@ -3730,7 +3824,10 @@
                 showToast("[LIMIT] 單套牌組上限為 20 張協議！", true);
                 return;
             }
-            if ((customDeck[cardId] || 0) >= 5) { showToast("[LIMIT] 單張同名協議最多放入 5 張！", true); return; }
+            if ((customDeck[cardId] || 0) >= 5) {
+                showToast("[LIMIT] 單張同名協議最多放入 5 張！", true);
+                return;
+            }
             customDeck[cardId] = (customDeck[cardId] || 0) + 1;
             const cardObj = cardsData.find(c => c.id === cardId);
             const nextTotal = total + 1;
@@ -3826,12 +3923,12 @@
                     countableCards += count;
                 }
                 return `
-                        <div class="deck-chip" onclick="removeCardFromDeck('${id}')" title="點擊移除 1 張">
-                            <span class="deck-chip-cost">[${c.cost}]</span>
-                            <span>${c.name}</span>
-                            <span class="deck-chip-count">x${count}</span>
-                        </div>
-                    `;
+                            <div class="deck-chip" onclick="removeCardFromDeck('${id}')" title="點擊移除 1 張">
+                                <span class="deck-chip-cost">[${c.cost}]</span>
+                                <span>${c.name}</span>
+                                <span class="deck-chip-count">x${count}</span>
+                            </div>
+                        `;
             }).join('');
 
             document.getElementById('deckTotalCount').innerText = totalCards;
@@ -3892,22 +3989,22 @@
                 card.onclick = () => openEnemyModal(index);
 
                 card.innerHTML = `
-                        <div class="dossier-art-box">
-                            <span class="dossier-badge ${enemy.tier}">${enemy.rank}</span>
-                            <span class="dossier-id">${enemy.code}</span>
-                            <img src="${enemy.img}" alt="${enemy.name}" loading="lazy" onerror="this.src='${fallbackImg}'">
-                        </div>
-                        <div class="dossier-body">
-                            <div>
-                                <div class="dossier-name">${enemy.name}</div>
-                                <div class="dossier-summary">${enemy.lore}</div>
+                            <div class="dossier-art-box">
+                                <span class="dossier-badge ${enemy.tier}">${enemy.rank}</span>
+                                <span class="dossier-id">${enemy.code}</span>
+                                <img src="${enemy.img}" alt="${enemy.name}" loading="lazy" onerror="this.src='${fallbackImg}'">
                             </div>
-                            <div class="dossier-footer">
-                                <span>${enemy.hp}</span>
-                                <span>檢視完整檔案 -></span>
+                            <div class="dossier-body">
+                                <div>
+                                    <div class="dossier-name">${enemy.name}</div>
+                                    <div class="dossier-summary">${enemy.lore}</div>
+                                </div>
+                                <div class="dossier-footer">
+                                    <span>${enemy.hp}</span>
+                                    <span>檢視完整檔案 -></span>
+                                </div>
                             </div>
-                        </div>
-                    `;
+                        `;
                 grid.appendChild(card);
             });
         }
@@ -3936,20 +4033,20 @@
             document.getElementById('modalCodeHeader').innerText = `${enemy.code} // ${enemy.rank} (${currentModalEnemyIndex + 1} / ${enemiesData.length})`;
 
             document.getElementById('modalContentBody').innerHTML = `
-                    <div class="modal-art-pane">
-                        <img src="${enemy.img}" alt="${enemy.name}" onerror="this.src='${fallbackImg}'">
-                        <div class="modal-stats-bar">
-                            <span>生命值：<strong style="color:#fff">${enemy.hp}</strong></span>
-                            <span>特性：<strong style="color:var(--accent-cyan)">${enemy.trauma}</strong></span>
+                        <div class="modal-art-pane">
+                            <img src="${enemy.img}" alt="${enemy.name}" onerror="this.src='${fallbackImg}'">
+                            <div class="modal-stats-bar">
+                                <span>生命值：<strong style="color:#fff">${enemy.hp}</strong></span>
+                                <span>特性：<strong style="color:var(--accent-cyan)">${enemy.trauma}</strong></span>
+                            </div>
                         </div>
-                    </div>
-                    <div class="modal-details-pane" id="modalDetailsScrollPane">
-                        <div class="modal-enemy-title">${enemy.name}</div>
-                        <div class="modal-enemy-chapter">${enemy.chapter}</div>
-                        <div class="modal-lore-box">${enemy.lore}</div>
-                        <div id="modalSkillsContainer"></div>
-                    </div>
-                `;
+                        <div class="modal-details-pane" id="modalDetailsScrollPane">
+                            <div class="modal-enemy-title">${enemy.name}</div>
+                            <div class="modal-enemy-chapter">${enemy.chapter}</div>
+                            <div class="modal-lore-box">${enemy.lore}</div>
+                            <div id="modalSkillsContainer"></div>
+                        </div>
+                    `;
 
             renderModalSkillsArea();
         }
@@ -3963,42 +4060,42 @@
 
             if (currentSkillViewMode === 'brief') {
                 listHtml = `<div class="modal-skill-list">` + enemy.briefSkills.map(s => `
-                        <div class="modal-skill-item">
-                            <div class="modal-skill-header">
-                                <span class="skill-tag ${s.tagClass}">${s.tag}</span>
-                                <span class="modal-skill-name">${s.name}</span>
+                            <div class="modal-skill-item">
+                                <div class="modal-skill-header">
+                                    <span class="skill-tag ${s.tagClass}">${s.tag}</span>
+                                    <span class="modal-skill-name">${s.name}</span>
+                                </div>
+                                <div class="modal-skill-desc">${highlightKeywords(s.desc)}</div>
                             </div>
-                            <div class="modal-skill-desc">${highlightKeywords(s.desc)}</div>
-                        </div>
-                    `).join('') + `</div>`;
+                        `).join('') + `</div>`;
             } else {
                 listHtml = enemy.detailSections.map(sec => `
-                        <div class="phase-group-title">${sec.phaseTitle}</div>
-                        <div class="modal-skill-list" style="margin-bottom: 16px;">
-                            ${sec.skills.map(s => `
-                                <div class="modal-skill-item ${s.isTrauma ? 'trauma-react' : ''}">
-                                    <div class="modal-skill-header">
-                                        <span class="skill-tag ${s.tagClass}">${s.tag}</span>
-                                        <span class="modal-skill-name">${s.name}</span>
+                            <div class="phase-group-title">${sec.phaseTitle}</div>
+                            <div class="modal-skill-list" style="margin-bottom: 16px;">
+                                ${sec.skills.map(s => `
+                                    <div class="modal-skill-item ${s.isTrauma ? 'trauma-react' : ''}">
+                                        <div class="modal-skill-header">
+                                            <span class="skill-tag ${s.tagClass}">${s.tag}</span>
+                                            <span class="modal-skill-name">${s.name}</span>
+                                        </div>
+                                        <div class="modal-skill-desc">${highlightKeywords(s.desc)}</div>
+                                        ${s.note ? `<div class="sub-effect-note">${highlightKeywords(s.note)}</div>` : ''}
                                     </div>
-                                    <div class="modal-skill-desc">${highlightKeywords(s.desc)}</div>
-                                    ${s.note ? `<div class="sub-effect-note">${highlightKeywords(s.note)}</div>` : ''}
-                                </div>
-                            `).join('')}
-                        </div>
-                    `).join('');
+                                `).join('')}
+                            </div>
+                        `).join('');
             }
 
             container.innerHTML = `
-                    <div class="skills-toolbar">
-                        <span class="modal-skills-title">核心行動與技能模組</span>
-                        <div class="mode-switch-group">
-                            <button class="mode-btn ${currentSkillViewMode === 'brief' ? 'active' : ''}" onclick="switchSkillMode('brief')">簡述模式</button>
-                            <button class="mode-btn ${currentSkillViewMode === 'detail' ? 'active' : ''}" onclick="switchSkillMode('detail')">詳述模式</button>
+                        <div class="skills-toolbar">
+                            <span class="modal-skills-title">核心行動與技能模組</span>
+                            <div class="mode-switch-group">
+                                <button class="mode-btn ${currentSkillViewMode === 'brief' ? 'active' : ''}" onclick="switchSkillMode('brief')">簡述模式</button>
+                                <button class="mode-btn ${currentSkillViewMode === 'detail' ? 'active' : ''}" onclick="switchSkillMode('detail')">詳述模式</button>
+                            </div>
                         </div>
-                    </div>
-                    ${listHtml}
-                `;
+                        ${listHtml}
+                    `;
         }
 
         function closeEnemyModal(event) {
@@ -4154,6 +4251,87 @@
 
             draw();
         })();
+
+        // =========================================================================
+        // 8. 背景音樂 (BGM) 終端控制引擎（預設開啟＋首次點擊自動解鎖）
+        // =========================================================================
+        const bgmAudio = document.getElementById('bgMusicPlayer');
+        const bgmWidget = document.getElementById('bgmWidget');
+        const bgmStatusText = document.getElementById('bgmStatusText');
+        let isBgmPlaying = false;
+        let userManuallyPaused = false;
+
+        if (bgmAudio) {
+            bgmAudio.volume = 0.35; // 預設柔和音量 35%
+        }
+
+        function setBgmUIState(playing) {
+            isBgmPlaying = playing;
+            if (playing) {
+                bgmWidget.classList.add('playing');
+                bgmStatusText.innerText = "BGM // ON";
+            } else {
+                bgmWidget.classList.remove('playing');
+                bgmStatusText.innerText = "BGM // OFF";
+            }
+        }
+
+        function startBgmPlayback(silentFail = false) {
+            if (!bgmAudio || isBgmPlaying || userManuallyPaused) return;
+            bgmAudio.play().then(() => {
+                setBgmUIState(true);
+            }).catch(() => {
+                // 若被瀏覽器自動播放政策攔截，則維持待機，等待使用者首次點擊網頁時自動喚醒
+                if (!silentFail) {
+                    showToast("[AUDIO] 瀏覽器限制自動播放，請點擊頁面任意處或 BGM 按鈕開啟", true);
+                }
+            });
+        }
+
+        function toggleBgm() {
+            if (!bgmAudio) return;
+            if (isBgmPlaying) {
+                bgmAudio.pause();
+                userManuallyPaused = true;
+                setBgmUIState(false);
+                showToast("[AUDIO] 背景音訊迴路已暫停");
+            } else {
+                userManuallyPaused = false;
+                bgmAudio.play().then(() => {
+                    setBgmUIState(true);
+                    showToast("[AUDIO] 正在播放背景音訊：shizumiyukutaiyou");
+                }).catch(() => {
+                    showToast("[ERROR] 無法載入音訊檔案，請確認 images/shizumiyukutaiyou.mp3 路徑是否正確", true);
+                });
+            }
+        }
+
+        function changeBgmVolume(val) {
+            if (bgmAudio) {
+                bgmAudio.volume = parseFloat(val);
+            }
+        }
+
+        // 1. 網頁載入完成時，嘗試直接自動播放
+        window.addEventListener('DOMContentLoaded', () => {
+            startBgmPlayback(true);
+        });
+
+        // 2. 若載入時被瀏覽器擋下，在使用者首次點擊頁面任何地方時自動啟動播放
+        document.addEventListener('pointerdown', function unlockBgmOnFirstClick() {
+            if (!isBgmPlaying && !userManuallyPaused) {
+                startBgmPlayback(true);
+            }
+            if (isBgmPlaying) {
+                document.removeEventListener('pointerdown', unlockBgmOnFirstClick);
+            }
+        });
+
+        function changeBgmVolume(val) {
+            if (bgmAudio) {
+                bgmAudio.volume = parseFloat(val);
+            }
+        }
     </script>
 </body>
 </html>
