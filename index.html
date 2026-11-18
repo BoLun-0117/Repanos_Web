@@ -39,14 +39,15 @@
             font-weight: 400;
         }
 
-            /* 獨立遊戲級：動態游標微光追蹤 */
+            /* 動態游標微光追蹤（聚光增強版） */
             body::before {
                 content: "";
                 position: fixed;
                 inset: 0;
                 pointer-events: none;
-                z-index: 0;
-                background: radial-gradient( 600px circle at var(--mx, 50vw) var(--my, 50vh), rgba(56, 189, 248, 0.045), transparent 70% );
+                z-index: 2;
+                mix-blend-mode: screen;
+                background: radial-gradient( 280px circle at var(--mx, 50vw) var(--my, 50vh), rgba(56, 189, 248, 0.22) 0%, rgba(56, 189, 248, 0.08) 45%, transparent 75% );
             }
 
             /* 認知過載全螢幕短暫故障效果 */
@@ -249,7 +250,7 @@
                     }
 
         /* =========================================================
-           Hero 主視覺 + 數據速覽列
+           Hero 主視覺 + 動態數據速覽列
            ========================================================= */
         .hero {
             position: relative;
@@ -469,7 +470,7 @@
         }
 
         /* =========================================================
-           系統核心架構：非對稱神經終端機 UX 設計 (Anti-Template Layout)
+           系統核心架構：非對稱神經終端機 UX 設計
            ========================================================= */
         .arch-container {
             display: grid;
@@ -616,42 +617,175 @@
             margin-top: 6px;
         }
 
-        /* SYSTEM 01：扇形動態手牌與非對稱戰場 HUD */
-        .battle-hud-strip {
+        /* =========================================================
+           SYSTEM 01：左右對峙戰場舞台（大型木人樁 + 右側手牌區）
+           ========================================================= */
+        .combat-arena-grid {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            gap: 24px;
+            align-items: stretch;
+            margin-top: 8px;
+        }
+
+        /* 左側大型木人樁獨立對峙區 */
+        .dummy-stage-card {
+            position: relative;
+            background: radial-gradient(circle at 50% 45%, rgba(244, 63, 94, 0.14) 0%, rgba(6, 9, 15, 0.85) 80%);
+            border: 1px solid rgba(244, 63, 94, 0.35);
+            border-radius: 8px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            user-select: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+            .dummy-stage-card:hover {
+                border-color: var(--accent-red);
+                box-shadow: 0 0 24px rgba(244, 63, 94, 0.2);
+            }
+
+        .dummy-avatar-box {
+            position: relative;
+            width: 100%;
+            height: 215px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 4px 0;
+        }
+
+            .dummy-avatar-box img {
+                max-width: 100%;
+                max-height: 100%;
+                object-fit: contain;
+                filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.75));
+                transition: transform 0.1s ease;
+            }
+
+        /* 木人樁受擊震動閃紅動畫 */
+        .dummy-hit-anim {
+            animation: dummyHitShake 0.32s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+        }
+
+        @keyframes dummyHitShake {
+            0% {
+                transform: translate(0, 0) scale(1);
+                filter: brightness(1);
+            }
+
+            20% {
+                transform: translate(-10px, -4px) rotate(-5deg) scale(1.06);
+                filter: brightness(2.2) sepia(1) hue-rotate(-50deg) saturate(5);
+            }
+
+            45% {
+                transform: translate(8px, 3px) rotate(4deg);
+                filter: brightness(1.6) sepia(1) hue-rotate(-50deg) saturate(4);
+            }
+
+            70% {
+                transform: translate(-4px, 0) rotate(-2deg);
+            }
+
+            100% {
+                transform: translate(0, 0) rotate(0deg) scale(1);
+                filter: brightness(1);
+            }
+        }
+
+        /* 懸浮傷害跳字 (Floating Damage Text) */
+        .floating-dmg-text {
+            position: absolute;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Cinzel', 'Noto Sans TC', sans-serif;
+            font-weight: 800;
+            font-size: 1.45rem;
+            color: #fb7185;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.95), 0 0 14px rgba(244, 63, 94, 0.85);
+            pointer-events: none;
+            z-index: 40;
+            white-space: nowrap;
+            animation: floatUpFade 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+            .floating-dmg-text.cool {
+                color: var(--accent-cyan);
+                text-shadow: 0 2px 10px rgba(0, 0, 0, 0.95), 0 0 14px rgba(56, 189, 248, 0.85);
+            }
+
+            .floating-dmg-text.crit {
+                font-size: 1.75rem;
+                color: var(--accent-gold);
+                text-shadow: 0 2px 12px rgba(0, 0, 0, 0.95), 0 0 16px rgba(234, 179, 8, 0.95);
+            }
+
+        @keyframes floatUpFade {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, 8px) scale(0.75);
+            }
+
+            20% {
+                opacity: 1;
+                transform: translate(-50%, -10px) scale(1.15);
+            }
+
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -52px) scale(0.95);
+            }
+        }
+
+        .dummy-status-footer {
+            width: 100%;
+            text-align: center;
+        }
+
+        .dummy-hp-track {
+            width: 100%;
+            height: 7px;
+            background: #1f1218;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 6px 0 4px;
+        }
+
+        .dummy-hp-fill {
+            height: 100%;
+            background: var(--accent-red);
+            transition: width 0.2s ease;
+        }
+
+        /* 右側控制面板（雙資源條 + 扇形手牌） */
+        .combat-control-pane {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .dual-meters-bar {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 20px;
-            background: rgba(6, 9, 15, 0.7);
-            border-left: 3px solid var(--accent-red);
-            padding: 12px 18px;
-            margin-bottom: 26px;
+            gap: 16px;
+            background: rgba(6, 9, 15, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 6px;
+            padding: 12px 16px;
             flex-wrap: wrap;
         }
 
-        .enemy-holo-target {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-
-            .enemy-holo-target img {
-                width: 54px;
-                height: 54px;
-                object-fit: contain;
-                filter: drop-shadow(0 0 8px rgba(244, 63, 94, 0.4));
-            }
-
-        .dual-meters {
-            display: flex;
-            gap: 24px;
-            flex: 1;
-            min-width: 240px;
-            justify-content: flex-end;
-        }
-
         .meter-block {
-            width: 155px;
+            flex: 1;
+            min-width: 130px;
         }
 
         .hud-label {
@@ -663,9 +797,9 @@
         }
 
         .bar-bg {
-            height: 6px;
+            height: 7px;
             background: rgba(255, 255, 255, 0.08);
-            border-radius: 3px;
+            border-radius: 4px;
             overflow: hidden;
         }
 
@@ -686,13 +820,13 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 18px;
-            padding: 14px 0 6px;
-            min-height: 215px;
+            gap: 14px;
+            padding: 12px 0 4px;
+            flex: 1;
         }
 
         .fan-card {
-            width: 175px;
+            width: 155px;
             background: #131926;
             border: 1px solid #2e3d5c;
             border-radius: 8px;
@@ -704,7 +838,7 @@
         }
 
             .fan-card:nth-child(1) {
-                transform: rotate(-4deg) translateY(6px);
+                transform: rotate(-4deg) translateY(5px);
             }
 
             .fan-card:nth-child(2) {
@@ -713,18 +847,18 @@
             }
 
             .fan-card:nth-child(3) {
-                transform: rotate(4deg) translateY(6px);
+                transform: rotate(4deg) translateY(5px);
             }
 
             .fan-card:hover {
-                transform: rotate(0deg) translateY(-14px) scale(1.06) !important;
+                transform: rotate(0deg) translateY(-12px) scale(1.06) !important;
                 border-color: var(--accent-cyan);
                 box-shadow: 0 16px 32px rgba(56, 189, 248, 0.3);
                 z-index: 10;
             }
 
         .fan-card-art {
-            height: 125px;
+            height: 112px;
             position: relative;
             background: #080a0f;
         }
@@ -738,45 +872,51 @@
 
         .fan-card-cost {
             position: absolute;
-            top: 8px;
-            left: 8px;
+            top: 6px;
+            left: 6px;
             background: rgba(9, 11, 16, 0.92);
             color: var(--accent-cyan);
             border: 1px solid var(--accent-cyan);
-            font-size: 0.72rem;
+            font-size: 0.7rem;
             font-weight: 800;
-            padding: 1px 7px;
+            padding: 1px 6px;
             border-radius: 4px;
         }
 
         .fan-card-load {
             position: absolute;
-            top: 8px;
-            right: 8px;
+            top: 6px;
+            right: 6px;
             background: rgba(9, 11, 16, 0.92);
             color: var(--accent-red);
             border: 1px solid var(--accent-red);
-            font-size: 0.7rem;
+            font-size: 0.68rem;
             font-weight: 700;
-            padding: 1px 6px;
+            padding: 1px 5px;
             border-radius: 4px;
         }
 
         .fan-card-body {
-            padding: 10px 12px;
+            padding: 9px 10px;
             text-align: center;
         }
 
         .fan-card-name {
-            font-size: 0.88rem;
+            font-size: 0.84rem;
             font-weight: 700;
             color: #fff;
         }
 
         .fan-card-effect {
-            font-size: 0.74rem;
+            font-size: 0.72rem;
             color: var(--accent-gold);
             margin-top: 2px;
+        }
+
+        @media (max-width: 960px) {
+            .combat-arena-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
         /* 過載干擾視窗 */
@@ -831,7 +971,9 @@
             line-height: 1.45;
         }
 
-        /* SYSTEM 02：直接點擊卡牌觸發回收／幽靈卡槽打撈 */
+        /* =========================================================
+           SYSTEM 02：直接點擊卡牌觸發回收／幽靈卡槽打撈
+           ========================================================= */
         .deck-cycle-stage {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -899,7 +1041,9 @@
             align-items: center;
         }
 
-        /* SYSTEM 03：破框懸浮哲學對話終端 */
+        /* =========================================================
+           SYSTEM 03：破框懸浮哲學對話終端
+           ========================================================= */
         .philosophy-stage {
             display: grid;
             grid-template-columns: 165px 1fr;
@@ -1958,7 +2102,7 @@
             font-size: 0.82rem;
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
             animation: toastSlideIn 0.25s ease forwards;
-            max-width: 320px;
+            max-width: 340px;
         }
 
             .cyber-toast.warn {
@@ -1989,7 +2133,8 @@
             background: rgba(18, 22, 32, 0.92);
             border: 1px solid var(--border-color);
             color: var(--accent-cyan);
-            font-size: 1.1rem;
+            font-size: 0.85rem;
+            font-weight: 700;
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -2132,7 +2277,7 @@
 
     <!-- 右下角系統終端通知容器與返回頂部按鈕 -->
     <div id="toastContainer"></div>
-    <button id="backToTopBtn" title="返回頂部" onclick="window.scrollTo({top:0, behavior:'smooth'})">↑</button>
+    <button id="backToTopBtn" title="返回頂部" onclick="window.scrollTo({top:0, behavior:'smooth'})">TOP</button>
 
     <!-- 頂部導航列 -->
     <header>
@@ -2176,18 +2321,18 @@
                 <a href="#enemy-dex" class="btn btn-secondary">查閱異常實體檔案</a>
             </div>
 
-            <!-- 終端機數據速覽列 -->
+            <!-- 動態計算終端機數據速覽列（隨資料庫擴充自動同步更新） -->
             <div class="hero-metrics">
                 <div class="metric-item">
-                    <div class="metric-val">134</div>
+                    <div class="metric-val" id="metricTotalCards">0</div>
                     <div class="metric-label">收錄協議卡牌</div>
                 </div>
                 <div class="metric-item">
-                    <div class="metric-val">5</div>
+                    <div class="metric-val" id="metricCardTypes">0</div>
                     <div class="metric-label">戰術端系分類</div>
                 </div>
                 <div class="metric-item">
-                    <div class="metric-val">15</div>
+                    <div class="metric-val" id="metricTotalEnemies">0</div>
                     <div class="metric-label">異常意識實體</div>
                 </div>
                 <div class="metric-item">
@@ -2242,15 +2387,15 @@
         <div class="deck-builder-panel" id="deckBuilderPanel">
             <div class="deck-list-area">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <span style="font-weight:700; color:#fff; font-size:0.95rem;">🗂️ 自訂協議牌組構築台（點擊下方卡片右下角「+ 加入牌組」）</span>
+                    <span style="font-weight:700; color:#fff; font-size:0.95rem;">[DECK BUILDER] 自訂協議牌組構築台（點擊下方卡片右下角「+ 加入牌組」）</span>
                     <button class="action-mini-btn" onclick="clearCustomDeck()" style="font-size:0.76rem;">清空牌組</button>
                 </div>
                 <div class="deck-chips-wrap" id="deckChipsWrap">
                     <span style="color:var(--text-muted); font-size:0.82rem;">目前牌組為空，請從下方圖鑑挑選卡牌，或在右側貼上牌組代碼匯入...</span>
                 </div>
                 <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                    <button class="action-mini-btn" onclick="loadPresetDeck('crab')">🦀 預設流派：蟹化無限流</button>
-                    <button class="action-mini-btn" onclick="loadPresetDeck('selfharm')">🩸 預設流派：自殘祈禱流</button>
+                    <button class="action-mini-btn" onclick="loadPresetDeck('crab')">[PRESET] 預設流派：蟹化無限流</button>
+                    <button class="action-mini-btn" onclick="loadPresetDeck('selfharm')">[PRESET] 預設流派：自殘祈禱流</button>
                 </div>
             </div>
 
@@ -2273,15 +2418,15 @@
         <div class="controls-bar">
             <div class="controls-top-row">
                 <div class="tabs" id="cardTabs">
-                    <button class="tab-btn active" onclick="filterCards('all', this)">全部協議 (134)</button>
-                    <button class="tab-btn" onclick="filterCards('attack', this)">攻擊端 (32)</button>
-                    <button class="tab-btn" onclick="filterCards('defend', this)">防禦端 (25)</button>
-                    <button class="tab-btn" onclick="filterCards('resource', this)">資源端 (51)</button>
-                    <button class="tab-btn" onclick="filterCards('status', this)">狀態端 (21)</button>
-                    <button class="tab-btn" onclick="filterCards('ability', this)">能力端 (5)</button>
+                    <button class="tab-btn active" data-type="all" onclick="filterCards('all', this)">全部協議 (0)</button>
+                    <button class="tab-btn" data-type="attack" onclick="filterCards('attack', this)">攻擊端 (0)</button>
+                    <button class="tab-btn" data-type="defend" onclick="filterCards('defend', this)">防禦端 (0)</button>
+                    <button class="tab-btn" data-type="resource" onclick="filterCards('resource', this)">資源端 (0)</button>
+                    <button class="tab-btn" data-type="status" onclick="filterCards('status', this)">狀態端 (0)</button>
+                    <button class="tab-btn" data-type="ability" onclick="filterCards('ability', this)">能力端 (0)</button>
                 </div>
                 <div class="progress-box">
-                    <span>當前顯示：<strong id="filteredCount" style="color:#fff">134</strong> 張 ｜ 同步解鎖：<span class="progress-stat" id="unlockProgress">0 / 134</span></span>
+                    <span>當前顯示：<strong id="filteredCount" style="color:#fff">0</strong> 張 ｜ 同步解鎖：<span class="progress-stat" id="unlockProgress">0 / 0</span></span>
                     <button class="action-mini-btn" onclick="toggleAllCards(true)">全部解鎖</button>
                     <button class="action-mini-btn" onclick="toggleAllCards(false)">全部加密</button>
                 </div>
@@ -2291,7 +2436,7 @@
                 <div class="filter-search-group">
                     <div class="search-input-wrap">
                         <input type="text" id="cardSearchInput" class="search-input" placeholder="搜尋卡名、效果關鍵字（按 / 鍵快速定位）..." oninput="onCardSearchInput()">
-                        <button id="searchClearBtn" class="search-clear-btn" onclick="clearCardSearch()" title="清除搜尋">✕</button>
+                        <button id="searchClearBtn" class="search-clear-btn" onclick="clearCardSearch()" title="清除搜尋">X</button>
                     </div>
                     <div class="cost-pills" id="costPills">
                         <span class="cost-pill-label">費用篩選：</span>
@@ -2322,11 +2467,11 @@
         </div>
 
         <div class="enemy-filter-bar" id="enemyTabs">
-            <button class="tab-btn active" onclick="filterEnemies('all', this)">全部實體 (15)</button>
-            <button class="tab-btn" onclick="filterEnemies('normal', this)">教學與普通實體 (8)</button>
-            <button class="tab-btn" onclick="filterEnemies('elite', this)">菁英實體 (4)</button>
-            <button class="tab-btn" onclick="filterEnemies('boss', this)">章節首領 (2)</button>
-            <button class="tab-btn" onclick="filterEnemies('event', this)">特殊事件首領 (2)</button>
+            <button class="tab-btn active" data-tier="all" onclick="filterEnemies('all', this)">全部實體 (0)</button>
+            <button class="tab-btn" data-tier="normal" onclick="filterEnemies('normal', this)">教學與普通實體 (0)</button>
+            <button class="tab-btn" data-tier="elite" onclick="filterEnemies('elite', this)">菁英實體 (0)</button>
+            <button class="tab-btn" data-tier="boss" onclick="filterEnemies('boss', this)">章節首領 (0)</button>
+            <button class="tab-btn" data-tier="event" onclick="filterEnemies('event', this)">特殊事件首領 (0)</button>
         </div>
 
         <div class="enemy-grid" id="enemyGrid"></div>
@@ -2361,7 +2506,7 @@
 
     <script>
         // =========================================================================
-        // UX 輔助工具：科幻終端機 Toast 通知 & 關鍵字自動染色
+        // UX 輔助工具：科幻終端機 Toast 通知 & 關鍵字自動染色（純文字標籤無表情符號）
         // =========================================================================
         function showToast(msg, isWarn = false) {
             const container = document.getElementById('toastContainer');
@@ -2386,263 +2531,10 @@
         }
 
         // =========================================================================
-        // 系統核心架構：非對稱神經終端機互動沙盒 (SYSTEM 01 ~ 03)
-        // =========================================================================
-        let simSync = 3;
-        let simLoad = 68;
-        let simEnemyHp = 48;
-        let activePopups = [];
-        let slot2Consumed = false;
-        let memoryShards = 120;
-        let selectedPhilosophyChoice = null;
-
-        const archData = [
-            {
-                badge: "SYSTEM 01 // DUAL-RESOURCE COMBAT",
-                title: "雙資源與認知過載 (Sync & Load)",
-                desc: "直接點擊下方扇形手牌體驗出牌：每次行動同時消耗同步能量並推高認知負荷，一旦負荷突破 100% 將爆發干擾彈窗遮擋視線。",
-                renderHud: () => {
-                    const popupsHtml = activePopups.map(p => `
-                            <div class="overload-popup" style="top:${p.top}px; left:${p.left}px;">
-                                <div class="popup-bar">
-                                    <span>⚠️ ${p.code}</span>
-                                    <button class="popup-close" onclick="closeOverloadPopup(${p.id})">✕</button>
-                                </div>
-                                <div class="popup-body">${p.msg}</div>
-                            </div>
-                        `).join('');
-
-                    return `
-                        <div style="position:relative;">
-                            ${popupsHtml}
-                            <div class="battle-hud-strip">
-                                <div class="enemy-holo-target">
-                                    <img src="images/enemies/林立的學者·邊線.PNG" alt="林立的學者" onerror="this.style.display='none'">
-                                    <div>
-                                        <div style="font-size:0.86rem; font-weight:700; color:#fff;">林立的學者</div>
-                                        <div style="font-size:0.75rem; color:var(--accent-red); font-weight:700;">HP ${simEnemyHp} / 48</div>
-                                    </div>
-                                </div>
-                                <div class="dual-meters">
-                                    <div class="meter-block">
-                                        <div class="hud-label"><span style="color:#38bdf8">SYNC 能量</span><span>${simSync} / 4</span></div>
-                                        <div class="bar-bg"><div class="bar-fill-sync" style="width:${(simSync / 4) * 100}%"></div></div>
-                                    </div>
-                                    <div class="meter-block">
-                                        <div class="hud-label"><span style="color:#f43f5e">LOAD 負荷</span><span>${simLoad}%</span></div>
-                                        <div class="bar-bg"><div class="bar-fill-load" style="width:${Math.min(simLoad, 100)}%"></div></div>
-                                    </div>
-                                </div>
-                                <button class="action-mini-btn" onclick="resetSimBattle()" style="font-size:0.75rem;">↻ 重置</button>
-                            </div>
-
-                            <div class="fanned-hand-stage">
-                                <div class="fan-card" onclick="playSimCard('斯巴達式踢擊', 1, 22, 15)">
-                                    <div class="fan-card-art">
-                                        <img src="images/cards/斯巴達式踢擊.PNG" alt="斯巴達式踢擊">
-                                        <span class="fan-card-cost">⚡1</span>
-                                        <span class="fan-card-load">+22%</span>
-                                    </div>
-                                    <div class="fan-card-body">
-                                        <div class="fan-card-name">斯巴達式踢擊</div>
-                                        <div class="fan-card-effect">造成 15 傷害</div>
-                                    </div>
-                                </div>
-                                <div class="fan-card" onclick="playSimCard('伊卡洛斯的傲慢', 2, 38, 23)">
-                                    <div class="fan-card-art">
-                                        <img src="images/cards/伊卡洛斯的傲慢.PNG" alt="伊卡洛斯的傲慢">
-                                        <span class="fan-card-cost">⚡2</span>
-                                        <span class="fan-card-load">+38%</span>
-                                    </div>
-                                    <div class="fan-card-body">
-                                        <div class="fan-card-name">伊卡洛斯的傲慢</div>
-                                        <div class="fan-card-effect">造成 23 爆發重擊</div>
-                                    </div>
-                                </div>
-                                <div class="fan-card" onclick="playSimCard('思緒整理', 0, -30, 0)">
-                                    <div class="fan-card-art">
-                                        <img src="images/cards/思緒整理.PNG" alt="思緒整理">
-                                        <span class="fan-card-cost" style="color:#10b981; border-color:#10b981;">⚡0</span>
-                                        <span class="fan-card-load" style="color:#38bdf8; border-color:#38bdf8;">-30%</span>
-                                    </div>
-                                    <div class="fan-card-body">
-                                        <div class="fan-card-name">思緒整理</div>
-                                        <div class="fan-card-effect" style="color:#38bdf8;">冷卻認知負荷</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>`;
-                }
-            },
-            {
-                badge: "SYSTEM 02 // DECK ECOLOGY & SALVAGE",
-                title: "動態回收條件與永久消耗",
-                desc: "直接點擊中間的特質協議卡牌進行測試：未達成回收條件將永久消耗並留下紅色幽靈槽；再次點擊即可於精神交易所消耗碎片打撈。",
-                renderHud: () => `
-                        <div>
-                            <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:var(--text-muted); margin-bottom:8px;">
-                                <span>點擊特質協議卡片切換狀態</span>
-                                <span>記憶碎片：<strong style="color:var(--accent-gold)">💎 ${memoryShards}</strong></span>
-                            </div>
-                            <div class="deck-cycle-stage">
-                                <div class="cycle-card" onclick="showToast('✨ 《打擊》為普通特性，使用後直接進入棄牌堆循環。')">
-                                    <div class="cycle-art"><img src="images/cards/打擊.PNG" alt="打擊"></div>
-                                    <div class="cycle-info">
-                                        <span style="font-weight:700; font-size:0.88rem; color:#fff;">打擊</span>
-                                        <span style="font-size:0.74rem; color:var(--accent-cyan);">普通循環</span>
-                                    </div>
-                                </div>
-
-                                <div class="cycle-card ${slot2Consumed ? 'is-ghost' : ''}" onclick="${slot2Consumed ? 'salvageGhostCard()' : 'simCardRecycle(false)'}">
-                                    <div class="cycle-art">
-                                        <img src="images/cards/伊卡洛斯的傲慢.PNG" alt="伊卡洛斯的傲慢">
-                                        ${slot2Consumed ? '<div class="cycle-overlay-tag"><span>GHOST SLOT</span><span style="font-size:0.72rem; color:#eab308; margin-top:4px;">點擊花費 40 碎片打撈</span></div>' : '<div class="cycle-overlay-tag" style="background:rgba(9,11,16,0.2); color:#fff; font-size:0.75rem;">點擊模擬未達成條件</div>'}
-                                    </div>
-                                    <div class="cycle-info">
-                                        <span style="font-weight:700; font-size:0.88rem; color:${slot2Consumed ? 'var(--accent-red)' : '#fff'};">伊卡洛斯的傲慢</span>
-                                        <span style="font-size:0.74rem; color:${slot2Consumed ? 'var(--accent-red)' : 'var(--accent-gold)'};">${slot2Consumed ? '已永久消耗' : '特質協議'}</span>
-                                    </div>
-                                </div>
-
-                                <div class="cycle-card" onclick="simCardRecycle(true)">
-                                    <div class="cycle-art"><img src="images/cards/靈光一閃.PNG" alt="靈光一閃"></div>
-                                    <div class="cycle-info">
-                                        <span style="font-weight:700; font-size:0.88rem; color:#fff;">靈光一閃</span>
-                                        <span style="font-size:0.74rem; color:var(--accent-cyan);">回歸特性</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>`
-            },
-            {
-                badge: "SYSTEM 03 // PHILOSOPHICAL ENCOUNTER",
-                title: "哲學事件與人格抉擇",
-                desc: "與古希臘意識深層的哲學意象交鋒，點擊突觸分支選項，將人格抉擇直接轉化為專屬協議卡牌：",
-                renderHud: () => `
-                        <div class="philosophy-stage">
-                            <div class="npc-portrait-frame">
-                                <img src="images/enemies/第歐根尼·邊線.PNG" alt="第歐根尼" onerror="this.style.display='none'">
-                                <div style="font-size:0.82rem; font-weight:700; color:var(--accent-gold); margin-top:4px;">第歐根尼</div>
-                            </div>
-                            <div>
-                                <div class="quote-bubble">「卸下所有規則與護甲後，你還剩下什麼？」</div>
-                                <div class="synapse-choices">
-                                    <button class="synapse-btn" onclick="choosePhilosophy(0)">
-                                        <span>01 // 理性拆解邏輯悖論</span>
-                                        <span class="reward-chip" style="color:var(--accent-cyan);"><img src="images/cards/理性思考.PNG"> 獲得《理性思考》</span>
-                                    </button>
-                                    <button class="synapse-btn" onclick="choosePhilosophy(1)">
-                                        <span>02 // 擁抱痛苦與狂熱代價</span>
-                                        <span class="reward-chip" style="color:var(--accent-red);"><img src="images/cards/狂戰血祭.PNG"> 獲得《狂戰血祭》</span>
-                                    </button>
-                                    <button class="synapse-btn" onclick="choosePhilosophy(2)">
-                                        <span>03 // 犬儒式沉默轉身離去</span>
-                                        <span class="reward-chip" style="color:var(--accent-gold);"><img src="images/cards/武器化無能.PNG"> 獲得《武器化無能》</span>
-                                    </button>
-                                </div>
-                                ${selectedPhilosophyChoice ? `<div style="margin-top:10px; font-size:0.8rem; color:var(--accent-cyan);">➔ ${selectedPhilosophyChoice}</div>` : ''}
-                            </div>
-                        </div>`
-            }
-        ];
-
-        function switchArch(index, btn) {
-            document.querySelectorAll('.arch-tab').forEach(t => t.classList.remove('active'));
-            if (btn) btn.classList.add('active');
-            const item = archData[index];
-            document.getElementById('archDisplay').innerHTML = `
-                    <div class="arch-header-flex">
-                        <div>
-                            <div class="arch-badge">${item.badge}</div>
-                            <h3>${item.title}</h3>
-                            <p class="arch-desc-compact">${item.desc}</p>
-                        </div>
-                    </div>
-                    ${item.renderHud()}
-                `;
-        }
-
-        function playSimCard(name, cost, loadDelta, dmg) {
-            if (activePopups.length > 0) {
-                showToast("⚠️ 請先點擊關閉畫面上的過載報錯視窗！", true);
-                return;
-            }
-            if (simSync < cost) {
-                showToast("[SYSTEM] SYNC 同步能量不足，請點擊「↻ 重置」！", true);
-                return;
-            }
-            simSync -= cost;
-            simLoad = Math.max(0, simLoad + loadDelta);
-            simEnemyHp = Math.max(0, simEnemyHp - dmg);
-            if (simEnemyHp === 0) simEnemyHp = 48;
-
-            if (simLoad >= 100) {
-                document.body.classList.remove('overload-glitch');
-                void document.body.offsetWidth;
-                document.body.classList.add('overload-glitch');
-                activePopups = [
-                    { id: 1, top: 28, left: 30, code: "ERR_0x89 // 認知過載", msg: "突觸緩衝區溢位！手牌神經連結已遭干擾鎖定。" },
-                    { id: 2, top: 72, left: 190, code: "SYS_ALERT // 思緒雜訊", msg: "檢測到高負荷脈衝，請手動關閉此視窗以恢復控制！" }
-                ];
-                showToast("⚠️ [OVERLOAD] 認知負荷突破 100%！請手動排除干擾彈窗！", true);
-            } else {
-                showToast(`[PLAY] 打出《${name}》，當前認知負荷 ${simLoad}%`);
-            }
-            switchArch(0, document.querySelectorAll('.arch-tab')[0]);
-        }
-
-        function closeOverloadPopup(id) {
-            activePopups = activePopups.filter(p => p.id !== id);
-            if (activePopups.length === 0) {
-                simLoad = 65;
-                showToast("[CLEAR] 所有認知干擾視窗已排除，神經連結恢復穩定。");
-            }
-            switchArch(0, document.querySelectorAll('.arch-tab')[0]);
-        }
-
-        function resetSimBattle() {
-            simSync = 3;
-            simLoad = 68;
-            simEnemyHp = 48;
-            activePopups = [];
-            switchArch(0, document.querySelectorAll('.arch-tab')[0]);
-            showToast("[RESET] 模擬戰場已重置為初始回合狀態。");
-        }
-
-        function simCardRecycle(success) {
-            if (success) {
-                showToast("✨ [RECYCLE] 達成單回合受傷條件！協議卡牌已安全回收至棄牌堆。");
-            } else {
-                slot2Consumed = true;
-                showToast("💥 [CONSUMED] 未達成回收條件，卡牌已永久消耗並留下紅色幽靈槽！", true);
-                switchArch(1, document.querySelectorAll('.arch-tab')[1]);
-            }
-        }
-
-        function salvageGhostCard() {
-            if (memoryShards < 40) memoryShards = 120;
-            memoryShards -= 40;
-            slot2Consumed = false;
-            showToast("🔮 [SALVAGE] 已從精神交易所成功打撈並重構《伊卡洛斯的傲慢》！");
-            switchArch(1, document.querySelectorAll('.arch-tab')[1]);
-        }
-
-        function choosePhilosophy(choiceIdx) {
-            const outcomes = [
-                "抉擇結果：你冷靜拆解了悖論，獲得防禦端協議《理性思考》並清除 1 層認知負荷。",
-                "抉擇結果：你接納了痛苦與代價，獲得高爆發攻擊端協議《狂戰血祭》。",
-                "抉擇結果：你放棄了無謂的防備，獲得特殊防禦協議《武器化無能》。"
-            ];
-            selectedPhilosophyChoice = outcomes[choiceIdx];
-            showToast("[EVENT] 人格抉擇已記錄，牌組構築方向已同步更新。");
-            switchArch(2, document.querySelectorAll('.arch-tab')[2]);
-        }
-
-        // =========================================================================
-        // 1. 完整卡牌資料庫 (134 張)
+        // 1. 完整卡牌資料庫 (擴充時只需直接新增物件，全站統計會自動重新計算)
         // =========================================================================
         const cardsData = [
-            // --- 攻擊端 (32 張) ---
+            // --- 攻擊端 ---
             { id: "ATT-01", name: "打擊", type: "attack", typeName: "攻擊端", cost: "1", img: "images/cards/打擊.PNG", silhouetteImg: "images/silhouettes/打擊.PNG", desc: "造成6點傷害。", recycle: "卡牌特性：普通" },
             { id: "ATT-02", name: "追擊", type: "attack", typeName: "攻擊端", cost: "1", img: "images/cards/追擊.PNG", silhouetteImg: "images/silhouettes/追擊.PNG", desc: "當前回合每次攻擊後都會再造成5點傷害的攻擊。", recycle: "回收條件：一回合內造成3次傷害" },
             { id: "ATT-03", name: "精準打擊", type: "attack", typeName: "攻擊端", cost: "1", img: "images/cards/精準打擊.PNG", silhouetteImg: "images/silhouettes/精準打擊.PNG", desc: "造成 10 點傷害", recycle: "回收條件：對持有\"減益\"狀態的敵人造成傷害" },
@@ -2676,7 +2568,7 @@
             { id: "ATT-31", name: "五塊石頭", type: "attack", typeName: "攻擊端", cost: "3", img: "images/cards/五塊石頭.PNG", silhouetteImg: "images/silhouettes/五塊石頭.PNG", desc: "生成四張「投石索」卡牌與一張「精準的投石索」卡牌，將其加入手牌。", recycle: "卡牌特性：消耗" },
             { id: "ATT-32", name: "質疑", type: "attack", typeName: "攻擊端", cost: "1", img: "images/cards/質疑.PNG", silhouetteImg: "images/silhouettes/質疑.PNG", desc: "消耗一張卡牌，造成13點傷害。", recycle: "卡牌特性：回歸" },
 
-            // --- 防禦端 (25 張) ---
+            // --- 防禦端 ---
             { id: "DEF-01", name: "防禦", type: "defend", typeName: "防禦端", cost: "1", img: "images/cards/防禦.PNG", silhouetteImg: "images/silhouettes/防禦.PNG", desc: "獲得8點防禦", recycle: "卡牌特性：普通" },
             { id: "DEF-02", name: "強化防禦", type: "defend", typeName: "防禦端", cost: "2", img: "images/cards/強化防禦.PNG", silhouetteImg: "images/silhouettes/強化防禦.PNG", desc: "獲得18點防禦", recycle: "卡牌特性：普通" },
             { id: "DEF-03", name: "構建·內心防壁", type: "defend", typeName: "防禦端", cost: "2", img: "images/cards/構建·內心防壁.PNG", silhouetteImg: "images/silhouettes/構建·內心防壁.PNG", desc: "獲得2層堅韌，隨後獲得8點防禦。", recycle: "回收條件：單回合獲得24點防禦" },
@@ -2703,7 +2595,7 @@
             { id: "DEF-24", name: "狂熱的祭祀", type: "defend", typeName: "防禦端", cost: "1", img: "images/cards/狂熱的祭祀.PNG", silhouetteImg: "images/silhouettes/狂熱的祭祀.PNG", desc: "減少5 點HP，獲得 2 層堅韌。", recycle: "回收條件：HP<上限的 50%時。" },
             { id: "DEF-25", name: "戰鬥續行", type: "defend", typeName: "防禦端", cost: "2", img: "images/cards/戰鬥續行.PNG", silhouetteImg: "images/silhouettes/戰鬥續行.PNG", desc: "獲得 1 層毅力。", recycle: "回收條件：HP<上限的 10%時。受到敵人攻擊。" },
 
-            // --- 資源端 (51 張) ---
+            // --- 資源端 ---
             { id: "RES-01", name: "運籌帷幄", type: "resource", typeName: "資源端", cost: "0", img: "images/cards/運籌帷幄.PNG", silhouetteImg: "images/silhouettes/運籌帷幄.PNG", desc: "獲得1點能量", recycle: "回收條件：受到任何來源的傷害" },
             { id: "RES-02", name: "指令·保存", type: "resource", typeName: "資源端", cost: "1", img: "images/cards/指令·保存.PNG", silhouetteImg: "images/silhouettes/指令·保存.PNG", desc: "選擇3張卡牌，為其施加保留特性。被選定的卡牌被\"移除\"或\"消耗\"後移除保留特性。", recycle: "回收條件：抽牌堆剩餘張數>14時" },
             { id: "RES-03", name: "指令·剔除", type: "resource", typeName: "資源端", cost: "2", img: "images/cards/指令·剔除.PNG", silhouetteImg: "images/silhouettes/指令·剔除.PNG", desc: "\"移除\"3張卡牌，隨後獲得3點能量。", recycle: "回收條件：棄牌堆>18時" },
@@ -2756,7 +2648,7 @@
             { id: "RES-50", name: "命運三女神的紡車", type: "resource", typeName: "資源端", cost: "1", img: "images/cards/命運三女神的紡車.PNG", silhouetteImg: "images/silhouettes/命運三女神的紡車.PNG", desc: "隨機觸發以下其中一種判定：【克洛托的織線】：抽取 3 張卡牌，使這3張卡牌的能量消耗+1【拉刻西斯的分配】：減少自身 10 點 HP，但使手牌中所有卡牌本回合能量消耗降低至 0。【阿特羅波斯的剪斷】：獲得 3 點能量。使自身獲得3層衰弱，持續一回合。", recycle: "回收條件：玩家當前生命值恰好為質數時。" },
             { id: "RES-51", name: "帶來不和的金蘋果", type: "resource", typeName: "資源端", cost: "3", img: "images/cards/帶來不和的金蘋果.PNG", silhouetteImg: "images/silhouettes/帶來不和的金蘋果.PNG", desc: "隨機觸發以下其中一種判定：【赫拉的權柄】：獲得 2 點能量與 2 層力量，使敵方獲得 1 層力量。 【雅典娜的軍略】：抽取 3 張卡牌，使自身獲得 2 層堅韌。 【阿佛洛狄忒的禍水】：對敵方造成 14 點傷害，使雙方各獲得 2 層\"脆弱\"。", recycle: "卡牌特性：隨機/消耗" },
 
-            // --- 狀態端 (21 張) ---
+            // --- 狀態端 ---
             { id: "STA-01", name: "自負", type: "status", typeName: "狀態端", cost: "0", img: "images/cards/自負.PNG", silhouetteImg: "images/silhouettes/自負.PNG", desc: "獲得1層所有\"增益\"效果，持續一回合；下一回合獲得1層所有\"減益\"效果，持續一回合。", recycle: "回收條件：三回合不受到傷害" },
             { id: "STA-02", name: "簡易修整", type: "status", typeName: "狀態端", cost: "0", img: "images/cards/簡易修整.PNG", silhouetteImg: "images/silhouettes/簡易修整.PNG", desc: "解除身上(最新)的1層\"減益\"狀態", recycle: "回收條件：此卡送入棄牌堆的三回合後" },
             { id: "STA-03", name: "潮起潮落", type: "status", typeName: "狀態端", cost: "1", img: "images/cards/潮起潮落.PNG", silhouetteImg: "images/silhouettes/潮起潮落.PNG", desc: "獲得1層所有狀態", recycle: "回收條件：使用帶有\"心如止水\"字段的卡牌" },
@@ -2779,7 +2671,7 @@
             { id: "STA-20", name: "絕命對峙", type: "status", typeName: "狀態端", cost: "1", img: "images/cards/絕命對峙.PNG", silhouetteImg: "images/silhouettes/絕命對峙.PNG", desc: "賦予雙方1層力量，若對方為攻擊意圖，再賦予自身2層力量。", recycle: "回收條件：在對人行動意圖為攻擊的回合，不使用任何防禦牌。" },
             { id: "STA-21", name: "暴風雨", type: "status", typeName: "狀態端", cost: "2", img: "images/cards/暴風雨.PNG", silhouetteImg: "images/silhouettes/暴風雨.PNG", desc: "賦予雙方5層衰弱。", recycle: "卡牌特性：消耗" },
 
-            // --- 能力端 (5 張) ---
+            // --- 能力端 ---
             { id: "ABL-01", name: "超憶症", type: "ability", typeName: "能力端", cost: "4", img: "images/cards/超憶症.PNG", silhouetteImg: "images/silhouettes/超憶症.PNG", desc: "賦予自身\"超憶症\"效果。\"超憶症\":回合開始時，觸發一次前一回合使用的所有卡牌效果。", recycle: "卡牌特性：消耗" },
             { id: "ABL-02", name: "錄取通知", type: "ability", typeName: "能力端", cost: "3", img: "images/cards/錄取通知.PNG", silhouetteImg: "images/silhouettes/錄取通知.PNG", desc: "賦予自身\"工作夥伴\"效果，持續六回合。\"工作夥伴\":每次攻擊，使其傷害+8，並獲得9點防禦。", recycle: "回收條件：工作夥伴效果被移除。" },
             { id: "ABL-03", name: "荊棘環", type: "ability", typeName: "能力端", cost: "1", img: "images/cards/荊棘環.PNG", silhouetteImg: "images/silhouettes/荊棘環.PNG", desc: "賦予自身\"荊棘\"效果。\"荊棘\":回合開始時，減少1點HP。\"荊棘\"效果可疊加。", recycle: "回收條件：累積減少10點HP" },
@@ -2788,7 +2680,7 @@
         ];
 
         // =========================================================================
-        // 2. 完整敵人圖鑑資料庫 (共 15 隻實體)
+        // 2. 完整敵人圖鑑資料庫 (擴充時只需直接新增物件，全站統計會自動重新計算)
         // =========================================================================
         const enemiesData = [
             {
@@ -2877,7 +2769,7 @@
                 trauma: "無創傷槽",
                 chapter: "序章《職場記憶殘響》",
                 img: "images/enemies/I love my job·邊線.PNG",
-                lore: "印著「I ♥ MY JOB」字樣的破損馬克杯與加班文件聚合體，散發著強迫性的熱情與自我催眠氣息，試圖用過度勞累拖垮玩家的防線。",
+                lore: "印著「I LOVE MY JOB」字樣的破損馬克杯與加班文件聚合體，散發著強迫性的熱情與自我催眠氣息，試圖用過度勞累拖垮玩家的防線。",
                 briefSkills: [
                     { tag: "攻擊", tagClass: "atk", name: "熱情奉獻", desc: "對玩家造成 8 點傷害，並使自身獲得 1 層力量。" },
                     { tag: "妨害", tagClass: "deb", name: "超時工作", desc: "賦予玩家 2 層易碎與 1 層衰弱，模擬體力透支。" },
@@ -3274,7 +3166,392 @@
         ];
 
         // =========================================================================
-        // 3. 3D 翻轉、搜尋、費用篩選與進度儲存邏輯
+        // 動態統計計算中心（自動同步 Hero 速覽列與所有分類標籤張數）
+        // =========================================================================
+        function syncDynamicStatistics() {
+            const totalCards = cardsData.length;
+            const totalEnemies = enemiesData.length;
+            const distinctCardTypes = new Set(cardsData.map(c => c.type)).size;
+
+            // 更新 Hero 數據速覽
+            const elTotalCards = document.getElementById('metricTotalCards');
+            const elCardTypes = document.getElementById('metricCardTypes');
+            const elTotalEnemies = document.getElementById('metricTotalEnemies');
+            if (elTotalCards) elTotalCards.innerText = totalCards;
+            if (elCardTypes) elCardTypes.innerText = distinctCardTypes;
+            if (elTotalEnemies) elTotalEnemies.innerText = totalEnemies;
+
+            // 自動更新卡牌分類按鈕數量
+            const cardTypeLabels = {
+                all: "全部協議",
+                attack: "攻擊端",
+                defend: "防禦端",
+                resource: "資源端",
+                status: "狀態端",
+                ability: "能力端"
+            };
+            document.querySelectorAll('#cardTabs .tab-btn').forEach(btn => {
+                const t = btn.getAttribute('data-type');
+                const cnt = t === 'all' ? totalCards : cardsData.filter(c => c.type === t).length;
+                if (cardTypeLabels[t]) {
+                    btn.innerText = `${cardTypeLabels[t]} (${cnt})`;
+                }
+            });
+
+            // 自動更新敵人分類按鈕數量
+            const enemyTierLabels = {
+                all: "全部實體",
+                normal: "教學與普通實體",
+                elite: "菁英實體",
+                boss: "章節首領",
+                event: "特殊事件首領"
+            };
+            document.querySelectorAll('#enemyTabs .tab-btn').forEach(btn => {
+                const tier = btn.getAttribute('data-tier');
+                const cnt = tier === 'all' ? totalEnemies : enemiesData.filter(e => e.tier === tier).length;
+                if (enemyTierLabels[tier]) {
+                    btn.innerText = `${enemyTierLabels[tier]} (${cnt})`;
+                }
+            });
+        }
+
+        // =========================================================================
+        // 系統核心架構：非對稱神經終端機互動沙盒 (含爆打木人樁受擊與懸浮跳字)
+        // =========================================================================
+        let simSync = 3;
+        let simLoad = 68;
+        let simDummyHp = 100;
+        const simDummyMaxHp = 100;
+        let simComboCount = 0;
+        let activePopups = [];
+        let slot2Consumed = false;
+        let memoryShards = 120;
+        let selectedPhilosophyChoice = null;
+
+        function spawnFloatingText(text, styleClass = '') {
+            const box = document.getElementById('dummyAvatarBox');
+            if (!box) return;
+            const tag = document.createElement('div');
+            tag.className = `floating-dmg-text ${styleClass}`;
+            tag.innerText = text;
+            // 稍微錯開水平位置，連擊時不會重疊在一起
+            const offsetX = Math.floor(Math.random() * 44) - 22;
+            tag.style.left = `calc(50% + ${offsetX}px)`;
+            box.appendChild(tag);
+            setTimeout(() => tag.remove(), 880);
+        }
+
+        function triggerDummyHitVisual(dmgText, styleClass = '') {
+            const img = document.getElementById('dummyTargetImg');
+            if (img) {
+                img.classList.remove('dummy-hit-anim');
+                void img.offsetWidth;
+                img.classList.add('dummy-hit-anim');
+            }
+            spawnFloatingText(dmgText, styleClass);
+        }
+
+        function directPunchDummy() {
+            if (activePopups.length > 0) {
+                showToast("[WARNING] 請先關閉畫面上的過載報錯視窗！", true);
+                return;
+            }
+            simComboCount++;
+            const isCrit = simComboCount % 5 === 0;
+            const dmg = isCrit ? 12 : 4;
+            simDummyHp = Math.max(0, simDummyHp - dmg);
+            simLoad = Math.min(100, simLoad + 6);
+
+            const hpFill = document.getElementById('dummyHpFill');
+            const hpText = document.getElementById('dummyHpText');
+            const loadBar = document.getElementById('simLoadBar');
+            const loadText = document.getElementById('simLoadText');
+
+            if (simDummyHp === 0) {
+                simDummyHp = simDummyMaxHp;
+                showToast("[TARGET] 木人樁耐久歸零，已自動重新校準！");
+            }
+            if (hpFill) hpFill.style.width = `${(simDummyHp / simDummyMaxHp) * 100}%`;
+            if (hpText) hpText.innerText = `HP ${simDummyHp} / ${simDummyMaxHp}`;
+            if (loadBar) loadBar.style.width = `${simLoad}%`;
+            if (loadText) loadText.innerText = `${simLoad}%`;
+
+            triggerDummyHitVisual(isCrit ? `CRIT -${dmg}` : `-${dmg}`, isCrit ? 'crit' : '');
+
+            if (simLoad >= 100) {
+                triggerOverloadState();
+            }
+        }
+
+        function triggerOverloadState() {
+            document.body.classList.remove('overload-glitch');
+            void document.body.offsetWidth;
+            document.body.classList.add('overload-glitch');
+            activePopups = [
+                { id: 1, top: 28, left: 30, code: "ERR_0x89 // 認知過載", msg: "突觸緩衝區溢位！手牌神經連結已遭干擾鎖定。" },
+                { id: 2, top: 72, left: 190, code: "SYS_ALERT // 思緒雜訊", msg: "檢測到高負荷脈衝，請手動關閉此視窗以恢復控制！" }
+            ];
+            showToast("[OVERLOAD] 認知負荷突破 100%！請手動排除干擾彈窗！", true);
+            switchArch(0, document.querySelectorAll('.arch-tab')[0]);
+        }
+
+        const archData = [
+            {
+                badge: "SYSTEM 01 // DUAL-RESOURCE COMBAT",
+                title: "雙資源與認知過載 (Sync & Load)",
+                desc: "點擊下方扇形手牌出牌，或直接連點左側木人樁《金甲勇》測試連擊：每次行動同時推高認知負荷，突破 100% 將爆發干擾彈窗遮擋視線。",
+                renderHud: () => {
+                    const popupsHtml = activePopups.map(p => `
+                        <div class="overload-popup" style="top:${p.top}px; left:${p.left}px;">
+                            <div class="popup-bar">
+                                <span>[ALERT] ${p.code}</span>
+                                <button class="popup-close" onclick="closeOverloadPopup(${p.id})">X</button>
+                            </div>
+                            <div class="popup-body">${p.msg}</div>
+                        </div>
+                    `).join('');
+
+                    return `
+                    <div style="position:relative;">
+                        ${popupsHtml}
+                        <div class="combat-arena-grid">
+                            <!-- 左側：大型木人樁獨立對峙區 -->
+                            <div class="dummy-stage-card" onclick="directPunchDummy()" title="點擊木人樁直接測試普攻連擊！">
+                                <div style="width:100%; display:flex; justify-content:space-between; font-size:0.72rem; color:var(--text-muted);">
+                                    <span>TARGET // DUMMY</span>
+                                    <span style="color:var(--accent-red);">[點擊連擊]</span>
+                                </div>
+                                <div class="dummy-avatar-box" id="dummyAvatarBox">
+                                    <img id="dummyTargetImg" src="images/enemies/金甲勇（無聊版）.PNG" alt="金甲勇（無聊版）" onerror="this.src='images/enemies/最甲員工(無聊版).PNG'">
+                                </div>
+                                <div class="dummy-status-footer">
+                                    <div style="font-size:0.9rem; font-weight:700; color:#fff;">金甲勇（訓練木樁）</div>
+                                    <div class="dummy-hp-track"><div class="dummy-hp-fill" id="dummyHpFill" style="width:${(simDummyHp / simDummyMaxHp) * 100}%"></div></div>
+                                    <div id="dummyHpText" style="font-size:0.76rem; color:var(--accent-red); font-weight:700;">HP ${simDummyHp} / ${simDummyMaxHp}</div>
+                                </div>
+                            </div>
+
+                            <!-- 右側：雙資源儀表與扇形手牌區 -->
+                            <div class="combat-control-pane">
+                                <div class="dual-meters-bar">
+                                    <div class="meter-block">
+                                        <div class="hud-label"><span style="color:#38bdf8">SYNC 同步能量</span><span>${simSync} / 4</span></div>
+                                        <div class="bar-bg"><div class="bar-fill-sync" style="width:${(simSync / 4) * 100}%"></div></div>
+                                    </div>
+                                    <div class="meter-block">
+                                        <div class="hud-label"><span style="color:#f43f5e">LOAD 認知負荷</span><span id="simLoadText">${simLoad}%</span></div>
+                                        <div class="bar-bg"><div class="bar-fill-load" id="simLoadBar" style="width:${Math.min(simLoad, 100)}%"></div></div>
+                                    </div>
+                                    <button class="action-mini-btn" onclick="resetSimBattle()" style="font-size:0.75rem;">[RESET] 重置</button>
+                                </div>
+
+                                <div class="fanned-hand-stage">
+                                    <div class="fan-card" onclick="playSimCard('斯巴達式踢擊', 1, 22, 15)">
+                                        <div class="fan-card-art">
+                                            <img src="images/cards/斯巴達式踢擊.PNG" alt="斯巴達式踢擊">
+                                            <span class="fan-card-cost">1 SYNC</span>
+                                            <span class="fan-card-load">+22%</span>
+                                        </div>
+                                        <div class="fan-card-body">
+                                            <div class="fan-card-name">斯巴達式踢擊</div>
+                                            <div class="fan-card-effect">造成 15 點傷害</div>
+                                        </div>
+                                    </div>
+                                    <div class="fan-card" onclick="playSimCard('伊卡洛斯的傲慢', 2, 38, 23)">
+                                        <div class="fan-card-art">
+                                            <img src="images/cards/伊卡洛斯的傲慢.PNG" alt="伊卡洛斯的傲慢">
+                                            <span class="fan-card-cost">2 SYNC</span>
+                                            <span class="fan-card-load">+38%</span>
+                                        </div>
+                                        <div class="fan-card-body">
+                                            <div class="fan-card-name">伊卡洛斯的傲慢</div>
+                                            <div class="fan-card-effect">造成 23 點爆發重擊</div>
+                                        </div>
+                                    </div>
+                                    <div class="fan-card" onclick="playSimCard('思緒整理', 0, -30, 0)">
+                                        <div class="fan-card-art">
+                                            <img src="images/cards/思緒整理.PNG" alt="思緒整理">
+                                            <span class="fan-card-cost" style="color:#10b981; border-color:#10b981;">0 SYNC</span>
+                                            <span class="fan-card-load" style="color:#38bdf8; border-color:#38bdf8;">-30%</span>
+                                        </div>
+                                        <div class="fan-card-body">
+                                            <div class="fan-card-name">思緒整理</div>
+                                            <div class="fan-card-effect" style="color:#38bdf8;">冷卻認知負荷</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+                }
+            },
+            {
+                badge: "SYSTEM 02 // DECK ECOLOGY & SALVAGE",
+                title: "動態回收條件與永久消耗",
+                desc: "直接點擊中間的特質協議卡牌進行測試：未達成回收條件將永久消耗並留下紅色幽靈槽；再次點擊即可於精神交易所消耗碎片打撈。",
+                renderHud: () => `
+                        <div>
+                            <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:var(--text-muted); margin-bottom:8px;">
+                                <span>點擊特質協議卡片切換狀態</span>
+                                <span>記憶碎片：<strong style="color:var(--accent-gold)">${memoryShards} SHARDS</strong></span>
+                            </div>
+                            <div class="deck-cycle-stage">
+                                <div class="cycle-card" onclick="showToast('[NORMAL] 《打擊》為普通特性，使用後直接進入棄牌堆循環。')">
+                                    <div class="cycle-art"><img src="images/cards/打擊.PNG" alt="打擊"></div>
+                                    <div class="cycle-info">
+                                        <span style="font-weight:700; font-size:0.88rem; color:#fff;">打擊</span>
+                                        <span style="font-size:0.74rem; color:var(--accent-cyan);">普通循環</span>
+                                    </div>
+                                </div>
+
+                                <div class="cycle-card ${slot2Consumed ? 'is-ghost' : ''}" onclick="${slot2Consumed ? 'salvageGhostCard()' : 'simCardRecycle(false)'}">
+                                    <div class="cycle-art">
+                                        <img src="images/cards/伊卡洛斯的傲慢.PNG" alt="伊卡洛斯的傲慢">
+                                        ${slot2Consumed ? '<div class="cycle-overlay-tag"><span>GHOST SLOT</span><span style="font-size:0.72rem; color:#eab308; margin-top:4px;">點擊花費 40 碎片打撈</span></div>' : '<div class="cycle-overlay-tag" style="background:rgba(9,11,16,0.2); color:#fff; font-size:0.75rem;">點擊模擬未達成條件</div>'}
+                                    </div>
+                                    <div class="cycle-info">
+                                        <span style="font-weight:700; font-size:0.88rem; color:${slot2Consumed ? 'var(--accent-red)' : '#fff'};">伊卡洛斯的傲慢</span>
+                                        <span style="font-size:0.74rem; color:${slot2Consumed ? 'var(--accent-red)' : 'var(--accent-gold)'};">${slot2Consumed ? '已永久消耗' : '特質協議'}</span>
+                                    </div>
+                                </div>
+
+                                <div class="cycle-card" onclick="simCardRecycle(true)">
+                                    <div class="cycle-art"><img src="images/cards/靈光一閃.PNG" alt="靈光一閃"></div>
+                                    <div class="cycle-info">
+                                        <span style="font-weight:700; font-size:0.88rem; color:#fff;">靈光一閃</span>
+                                        <span style="font-size:0.74rem; color:var(--accent-cyan);">回歸特性</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>`
+            },
+            {
+                badge: "SYSTEM 03 // PHILOSOPHICAL ENCOUNTER",
+                title: "哲學事件與人格抉擇",
+                desc: "與古希臘意識深層的哲學意象交鋒，點擊突觸分支選項，將人格抉擇直接轉化為專屬協議卡牌：",
+                renderHud: () => `
+                        <div class="philosophy-stage">
+                            <div class="npc-portrait-frame">
+                                <img src="images/enemies/第歐根尼·邊線.PNG" alt="第歐根尼" onerror="this.style.display='none'">
+                                <div style="font-size:0.82rem; font-weight:700; color:var(--accent-gold); margin-top:4px;">第歐根尼</div>
+                            </div>
+                            <div>
+                                <div class="quote-bubble">「卸下所有規則與護甲後，你還剩下什麼？」</div>
+                                <div class="synapse-choices">
+                                    <button class="synapse-btn" onclick="choosePhilosophy(0)">
+                                        <span>01 // 理性拆解邏輯悖論</span>
+                                        <span class="reward-chip" style="color:var(--accent-cyan);"><img src="images/cards/理性思考.PNG"> 獲得《理性思考》</span>
+                                    </button>
+                                    <button class="synapse-btn" onclick="choosePhilosophy(1)">
+                                        <span>02 // 擁抱痛苦與狂熱代價</span>
+                                        <span class="reward-chip" style="color:var(--accent-red);"><img src="images/cards/狂戰血祭.PNG"> 獲得《狂戰血祭》</span>
+                                    </button>
+                                    <button class="synapse-btn" onclick="choosePhilosophy(2)">
+                                        <span>03 // 犬儒式沉默轉身離去</span>
+                                        <span class="reward-chip" style="color:var(--accent-gold);"><img src="images/cards/武器化無能.PNG"> 獲得《武器化無能》</span>
+                                    </button>
+                                </div>
+                                ${selectedPhilosophyChoice ? `<div style="margin-top:10px; font-size:0.8rem; color:var(--accent-cyan);">[RESULT] ${selectedPhilosophyChoice}</div>` : ''}
+                            </div>
+                        </div>`
+            }
+        ];
+
+        function switchArch(index, btn) {
+            document.querySelectorAll('.arch-tab').forEach(t => t.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+            const item = archData[index];
+            document.getElementById('archDisplay').innerHTML = `
+                    <div class="arch-header-flex">
+                        <div>
+                            <div class="arch-badge">${item.badge}</div>
+                            <h3>${item.title}</h3>
+                            <p class="arch-desc-compact">${item.desc}</p>
+                        </div>
+                    </div>
+                    ${item.renderHud()}
+                `;
+        }
+
+        function playSimCard(name, cost, loadDelta, dmg) {
+            if (activePopups.length > 0) {
+                showToast("[WARNING] 請先點擊關閉畫面上的過載報錯視窗！", true);
+                return;
+            }
+            if (simSync < cost) {
+                showToast("[SYSTEM] SYNC 同步能量不足，請點擊「[RESET] 重置」！", true);
+                return;
+            }
+            simSync -= cost;
+            simLoad = Math.max(0, simLoad + loadDelta);
+            simDummyHp = Math.max(0, simDummyHp - dmg);
+            if (simDummyHp === 0) simDummyHp = simDummyMaxHp;
+
+            if (simLoad >= 100) {
+                triggerOverloadState();
+                if (dmg > 0) triggerDummyHitVisual(`-${dmg}`, dmg >= 20 ? 'crit' : '');
+                return;
+            }
+
+            switchArch(0, document.querySelectorAll('.arch-tab')[0]);
+            if (dmg > 0) {
+                triggerDummyHitVisual(`-${dmg}`, dmg >= 20 ? 'crit' : '');
+            } else if (loadDelta < 0) {
+                spawnFloatingText(`LOAD ${loadDelta}%`, 'cool');
+            }
+            showToast(`[PLAY] 打出《${name}》，當前認知負荷 ${simLoad}%`);
+        }
+
+        function closeOverloadPopup(id) {
+            activePopups = activePopups.filter(p => p.id !== id);
+            if (activePopups.length === 0) {
+                simLoad = 65;
+                showToast("[CLEAR] 所有認知干擾視窗已排除，神經連結恢復穩定。");
+            }
+            switchArch(0, document.querySelectorAll('.arch-tab')[0]);
+        }
+
+        function resetSimBattle() {
+            simSync = 3;
+            simLoad = 68;
+            simDummyHp = simDummyMaxHp;
+            simComboCount = 0;
+            activePopups = [];
+            switchArch(0, document.querySelectorAll('.arch-tab')[0]);
+            showToast("[RESET] 模擬戰場已重置為初始回合狀態。");
+        }
+
+        function simCardRecycle(success) {
+            if (success) {
+                showToast("[RECYCLE] 達成單回合受傷條件！協議卡牌已安全回收至棄牌堆。");
+            } else {
+                slot2Consumed = true;
+                showToast("[CONSUMED] 未達成回收條件，卡牌已永久消耗並留下紅色幽靈槽！", true);
+                switchArch(1, document.querySelectorAll('.arch-tab')[1]);
+            }
+        }
+
+        function salvageGhostCard() {
+            if (memoryShards < 40) memoryShards = 120;
+            memoryShards -= 40;
+            slot2Consumed = false;
+            showToast("[SALVAGE] 已從精神交易所成功打撈並重構《伊卡洛斯的傲慢》！");
+            switchArch(1, document.querySelectorAll('.arch-tab')[1]);
+        }
+
+        function choosePhilosophy(choiceIdx) {
+            const outcomes = [
+                "你冷靜拆解了悖論，獲得防禦端協議《理性思考》並清除 1 層認知負荷。",
+                "你接納了痛苦與代價，獲得高爆發攻擊端協議《狂戰血祭》。",
+                "你放棄了無謂的防備，獲得特殊防禦協議《武器化無能》。"
+            ];
+            selectedPhilosophyChoice = outcomes[choiceIdx];
+            showToast("[EVENT] 人格抉擇已記錄，牌組構築方向已同步更新。");
+            switchArch(2, document.querySelectorAll('.arch-tab')[2]);
+        }
+
+        // =========================================================================
+        // 3. 3D 翻轉、搜尋、費用篩選與動態統計進度邏輯
         // =========================================================================
         let unlockedList = JSON.parse(localStorage.getItem('repanos_unlocked_cards_v2')) || [
             "ATT-01", "ATT-15", "ATT-16", "ATT-22", "DEF-01", "DEF-14", "DEF-18", "DEF-20", "RES-01", "RES-06", "RES-16", "STA-03", "ABL-02"
@@ -3289,7 +3566,9 @@
         }
 
         function updateProgressText() {
-            document.getElementById('unlockProgress').innerText = `${unlockedList.length} / ${cardsData.length}`;
+            // 過濾掉已不存在於 cardsData 的舊 ID，確保分母與分子永遠精準同步
+            const validUnlockedCount = unlockedList.filter(id => cardsData.some(c => c.id === id)).length;
+            document.getElementById('unlockProgress').innerText = `${validUnlockedCount} / ${cardsData.length}`;
         }
 
         function flipCardElement(card, cardElement) {
@@ -3313,7 +3592,7 @@
                 if (unlockAll) el.classList.remove('is-flipped');
                 else el.classList.add('is-flipped');
             });
-            showToast(unlockAll ? `[SYNC] 已全數解鎖 134 張記憶協議檔案` : `[LOCK] 已將全部協議檔案重置為加密剪影狀態`, !unlockAll);
+            showToast(unlockAll ? `[SYNC] 已全數解鎖 ${cardsData.length} 張記憶協議檔案` : `[LOCK] 已將全部 ${cardsData.length} 張協議檔案重置為加密剪影狀態`, !unlockAll);
         }
 
         function filterCards(type, btnElement) {
@@ -3448,12 +3727,13 @@
         function addCardToDeck(cardId) {
             const total = Object.values(customDeck).reduce((a, b) => a + b, 0);
             if (total >= 20) {
-                showToast("⚠️ 單套牌組上限為 20 張協議！", true);
+                showToast("[LIMIT] 單套牌組上限為 20 張協議！", true);
                 return;
             }
             customDeck[cardId] = (customDeck[cardId] || 0) + 1;
             const cardObj = cardsData.find(c => c.id === cardId);
-            showToast(`➕ 已將《${cardObj ? cardObj.name : cardId}》加入牌組`);
+            const nextTotal = total + 1;
+            showToast(`[DECK ${nextTotal}/20] 已將《${cardObj ? cardObj.name : cardId}》加入牌組`);
             renderDeckBuilder();
         }
 
@@ -3467,16 +3747,18 @@
         function clearCustomDeck() {
             customDeck = {};
             renderDeckBuilder();
-            showToast("🗑️ 已清空自訂牌組。");
+            showToast("[CLEAR] 已清空自訂牌組。");
         }
 
         function loadPresetDeck(type) {
             if (type === 'crab') {
                 customDeck = { "DEF-15": 3, "RES-27": 2, "RES-28": 2, "RES-40": 2, "RES-48": 2, "STA-17": 2 };
-                showToast("🦀 已載入預設構築：《蟹化無限循環流》");
+                const cnt = Object.values(customDeck).reduce((a, b) => a + b, 0);
+                showToast(`[PRESET] 已載入《蟹化無限循環流》（共 ${cnt} 張協議）`);
             } else if (type === 'selfharm') {
                 customDeck = { "ATT-06": 2, "ATT-11": 1, "DEF-08": 2, "RES-14": 2, "RES-15": 2, "STA-13": 2, "ABL-04": 1 };
-                showToast("🩸 已載入預設構築：《自殘祈禱爆發流》");
+                const cnt = Object.values(customDeck).reduce((a, b) => a + b, 0);
+                showToast(`[PRESET] 已載入《自殘祈禱爆發流》（共 ${cnt} 張協議）`);
             }
             renderDeckBuilder();
         }
@@ -3537,7 +3819,7 @@
                         <div class="deck-chip" onclick="removeCardFromDeck('${id}')" title="點擊移除 1 張">
                             <span class="deck-chip-cost">[${c.cost}]</span>
                             <span>${c.name}</span>
-                            <span class="deck-chip-count">×${count}</span>
+                            <span class="deck-chip-count">x${count}</span>
                         </div>
                     `;
             }).join('');
@@ -3550,11 +3832,12 @@
         function copyDeckCode() {
             const code = document.getElementById('deckCodeInput').value;
             if (!code) {
-                showToast("⚠️ 請先在牌組中加入卡牌再複製代碼！", true);
+                showToast("[WARNING] 請先在牌組中加入卡牌再複製代碼！", true);
                 return;
             }
+            const total = Object.values(customDeck).reduce((a, b) => a + b, 0);
             navigator.clipboard.writeText(code).then(() => {
-                showToast("📋 牌組代碼已複製到剪貼簿！可直接貼給隊友匯入。");
+                showToast(`[COPIED] 牌組代碼已複製（共 ${total} 張協議），可直接貼給隊友匯入。`);
             });
         }
 
@@ -3562,12 +3845,13 @@
             const code = document.getElementById('deckCodeInput').value;
             const parsed = decodeStringToDeck(code);
             if (!parsed) {
-                showToast("❌ 無效的牌組代碼，請確認是否為 RPN- 開頭！", true);
+                showToast("[ERROR] 無效的牌組代碼，請確認是否為 RPN- 開頭！", true);
                 return;
             }
             customDeck = parsed;
             renderDeckBuilder();
-            showToast("✅ 牌組代碼匯入成功！已還原對應卡牌配置。");
+            const total = Object.values(customDeck).reduce((a, b) => a + b, 0);
+            showToast(`[IMPORTED] 牌組代碼匯入成功！已還原 ${total} 張協議配置。`);
         }
 
         // =========================================================================
@@ -3610,7 +3894,7 @@
                             </div>
                             <div class="dossier-footer">
                                 <span>${enemy.hp}</span>
-                                <span>檢視完整檔案 →</span>
+                                <span>檢視完整檔案 -></span>
                             </div>
                         </div>
                     `;
@@ -3766,7 +4050,8 @@
             });
         }, { passive: true });
 
-        // 初始化執行
+        // 初始化執行（先同步全站動態統計數字，再渲染介面）
+        syncDynamicStatistics();
         switchArch(0, document.querySelector('.arch-tab'));
         renderCards();
         renderEnemies();
